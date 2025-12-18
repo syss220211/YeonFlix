@@ -10,7 +10,5 @@ import ProjectDescriptionHelpers
 
 let designSystemProject = Project.makeDesignSystemModule(
     name: "DesignSystem",
-    dependencies: [
-        .project(target: "CoreUI", path: "../Core/CoreUI")
-    ]
+    dependencies: []
 )

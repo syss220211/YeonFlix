@@ -9,10 +9,11 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let CoreUIProject = Project.makeCoreModule(
-    name: "CoreUI",
+    name: "CoreCommonUI",
     isResource: false,
     dependencies: [
         .external(name: "Kingfisher"),
-        .external(name: "SnapKit")
+        .external(name: "SnapKit"),
+        .project(target: "DesignSystem", path: "../../DesignSystem")
     ]
 )

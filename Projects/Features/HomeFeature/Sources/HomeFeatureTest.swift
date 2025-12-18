@@ -7,7 +7,8 @@
 
 import UIKit
 
-import CoreUI
+import CoreCommonUI
+import CoreNetwork
 import DesignSystem
 
 public final class HomeViewController: UIViewController {
