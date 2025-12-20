@@ -8,4 +8,10 @@
 import ProjectDescription
 import ProjectDescriptionHelpers
 
-let coreNetworkProject = Project.makeCoreModule(name: "CoreNetwork", isResource: false)
+let coreNetworkProject = Project.makeCoreModule(
+    name: "CoreNetwork",
+    isResource: false,
+    dependencies: [
+        .project(target: "CoreSecurity", path: "../../Core/CoreSecurity")
+    ]
+)

@@ -17,6 +17,9 @@ public enum Home: Endpoint {
     case topRatedMovies
     /// 개봉 예정 영화
     case upcomingMovies
+    
+    /// API Key 필참 여부
+    public var requiresKey: Bool { true }
 }
 
 public extension Home {
