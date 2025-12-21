@@ -10,8 +10,8 @@ import Foundation
 
 public final class KeychainAPIKeyStore: APIKeyStore {
 
-    private let service = "com.yourapp.auth"
-    private let account = "accessToken"
+    private let service = ""
+    private let account = ""
 
     public init() {}
 
