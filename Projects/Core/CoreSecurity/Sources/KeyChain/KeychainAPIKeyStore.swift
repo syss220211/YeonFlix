@@ -8,10 +8,14 @@
 
 import Foundation
 
+enum KeychainService {
+    static let accessToken = "accessToken"
+}
+
 public final class KeychainAPIKeyStore: APIKeyStore {
 
-    private let service = ""
-    private let account = ""
+    private let service = Bundle.main.bundleIdentifier ?? ""
+    private let account = KeychainService.accessToken
 
     public init() {}
 
