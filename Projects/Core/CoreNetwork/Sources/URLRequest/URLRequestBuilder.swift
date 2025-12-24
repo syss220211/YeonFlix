@@ -8,6 +8,8 @@
 
 import Foundation
 
+import CoreSecurity
+
 public protocol URLRequestBuilder {
     func build(
         endpoint: Endpoint,
@@ -17,7 +19,11 @@ public protocol URLRequestBuilder {
 
 public final class DefaultURLRequestBuilder: URLRequestBuilder {
 
-    public init() {}
+    private let authHeaderProvider: AuthHeaderProvider
+
+    public init(authHeaderProvider: AuthHeaderProvider) {
+        self.authHeaderProvider = authHeaderProvider
+    }
 
     public func build(
         endpoint: Endpoint,
@@ -41,12 +47,22 @@ public final class DefaultURLRequestBuilder: URLRequestBuilder {
         request.httpMethod = endpoint.method.rawValue
         request.httpBody = endpoint.body
 
+        // 공통 헤더
         config.defaultHeaders.forEach {
             request.addValue($0.value, forHTTPHeaderField: $0.key)
         }
 
+        // Endpoint 전용 헤더
         endpoint.headers?.forEach {
             request.addValue($0.value, forHTTPHeaderField: $0.key)
+        }
+
+        // API Key 헤더 (Keychain → Provider)
+        if endpoint.requiresKey,
+           let authHeaders = authHeaderProvider.makeAuthHeader() {
+            authHeaders.forEach {
+                request.addValue($0.value, forHTTPHeaderField: $0.key)
+            }
         }
 
         return .success(request)

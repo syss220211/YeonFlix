@@ -14,4 +14,6 @@ public protocol Endpoint {
     var queryItems: [URLQueryItem]? { get }
     var headers: [String: String]? { get }
     var body: Data? { get }
+    
+    var requiresKey: Bool { get }
 }

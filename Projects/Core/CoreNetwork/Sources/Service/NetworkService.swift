@@ -10,9 +10,8 @@ import Foundation
 
 public protocol NetworkService {
     func request<T: Decodable>(
-        endpoint: Endpoint,
-        completion: @Sendable @escaping (Result<T, NetworkError>) -> Void
-    )
+        endpoint: Endpoint
+    ) async throws -> T
 }
 
 public final class DefaultNetworkService: NetworkService {
@@ -24,8 +23,8 @@ public final class DefaultNetworkService: NetworkService {
 
     public init(
         config: APIConfig,
-        requestBuilder: URLRequestBuilder = DefaultURLRequestBuilder(),
-        sessionProvider: URLSessionProvider = DefaultURLSessionProvider(),
+        requestBuilder: URLRequestBuilder,
+        sessionProvider: URLSessionProvider,
         decoder: JSONDecoder = JSONDecoder()
     ) {
         self.config = config
@@ -33,48 +32,26 @@ public final class DefaultNetworkService: NetworkService {
         self.sessionProvider = sessionProvider
         self.decoder = decoder
     }
-
+    
     public func request<T: Decodable>(
-        endpoint: Endpoint,
-        completion: @Sendable @escaping (Result<T, NetworkError>) -> Void
-    ) {
-        let result = requestBuilder.build(endpoint: endpoint, config: config)
-
-        switch result {
-        case .failure(let error):
-            completion(.failure(error))
-
-        case .success(let request):
-            let decoder = self.decoder
-
-            let task = sessionProvider.session.dataTask(with: request) {
-                data, response, error in
-
-                if let error {
-                    completion(.failure(.transportError(error)))
-                    return
-                }
-
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200..<300).contains(httpResponse.statusCode) else {
-                    completion(.failure(.invalidResponse))
-                    return
-                }
-
-                guard let data else {
-                    completion(.failure(.noData))
-                    return
-                }
-
-                do {
-                    let decoded = try decoder.decode(T.self, from: data)
-                    completion(.success(decoded))
-                } catch {
-                    completion(.failure(.decodingError(error)))
-                }
-            }
-
-            task.resume()
+        endpoint: Endpoint
+    ) async throws -> T {
+        let request = try requestBuilder
+            .build(endpoint: endpoint, config: config)
+            .get()
+        
+        let (data, response) = try await sessionProvider.session.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode)
+        else {
+            throw NetworkError.invalidResponse
+        }
+        
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw NetworkError.decodingError(error)
         }
     }
 }
