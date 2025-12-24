@@ -1,5 +1,5 @@
 //
-//  Home.swift
+//  Movie.swift
 //  CoreNetwork
 //
 //  Created by 박서연 on 12/18/25.
@@ -8,11 +8,11 @@
 
 import Foundation
 
-public enum Home: Endpoint {
+public enum Movie: Endpoint {
     /// 인기 콘텐츠
     case popularContents
     /// 현재 상영 중
-    case nowPlaying
+    case nowPlaying(page: Int)
     /// 평점 높은 영화
     case topRatedMovies
     /// 개봉 예정 영화
@@ -22,13 +22,13 @@ public enum Home: Endpoint {
     public var requiresKey: Bool { true }
 }
 
-public extension Home {
+public extension Movie {
     var path: String {
         switch self {
         case .popularContents:
             "/movie/popular"
         case .nowPlaying:
-            "/mo"
+            "/movie/now_playing"
         case .topRatedMovies:
             "dd"
         case .upcomingMovies:
@@ -43,11 +43,21 @@ public extension Home {
     }
     
     var queryItems: [URLQueryItem]? {
-        nil
+        switch self {
+        case .nowPlaying(let page):
+            return [
+                URLQueryItem(name: "language", value: "ko-KR"),
+                URLQueryItem(name: "page", value: "\(page)"),
+            ]
+        default:
+            return nil
+        }
     }
     
     var headers: [String : String]? {
-        nil
+        return [
+            "accept" : "application/json"
+        ]
     }
     
     var body: Data? {

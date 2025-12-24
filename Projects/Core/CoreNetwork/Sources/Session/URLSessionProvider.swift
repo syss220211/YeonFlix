@@ -14,7 +14,7 @@ public protocol URLSessionProvider {
 
 public final class DefaultURLSessionProvider: URLSessionProvider {
     public let session: URLSessionProtocol
-
+    
     public init(configuration: URLSessionConfiguration = .default) {
         self.session = URLSession(configuration: configuration)
     }

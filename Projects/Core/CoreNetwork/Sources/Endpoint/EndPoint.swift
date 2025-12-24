@@ -15,5 +15,5 @@ public protocol Endpoint {
     var headers: [String: String]? { get }
     var body: Data? { get }
     
-    var requeiresKey: Bool { get }
+    var requiresKey: Bool { get }
 }

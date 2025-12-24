@@ -58,7 +58,7 @@ public final class DefaultURLRequestBuilder: URLRequestBuilder {
         }
 
         // API Key 헤더 (Keychain → Provider)
-        if endpoint.requeiresKey,
+        if endpoint.requiresKey,
            let authHeaders = authHeaderProvider.makeAuthHeader() {
             authHeaders.forEach {
                 request.addValue($0.value, forHTTPHeaderField: $0.key)

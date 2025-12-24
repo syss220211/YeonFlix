@@ -12,6 +12,7 @@ let coreNetworkProject = Project.makeCoreModule(
     name: "CoreNetwork",
     isResource: false,
     dependencies: [
-        .project(target: "CoreSecurity", path: "../../Core/CoreSecurity")
+        .project(target: "CoreSecurity", path: "../../Core/CoreSecurity"),
+        .project(target: "CoreModels", path: "../../Core/CoreModels")
     ]
 )
