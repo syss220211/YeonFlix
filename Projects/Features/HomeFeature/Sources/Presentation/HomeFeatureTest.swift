@@ -12,9 +12,17 @@ import CoreNetwork
 import CoreSecurity
 import DesignSystem
 
+import RxSwift
+import RxRelay
+import RxCocoa
+
 public final class HomeViewController: UIViewController {
 
-    private let useCase: HomeUseCase
+    // MARK: - Properties
+    private let viewModel: HomeViewModel
+    private let disposeBag = DisposeBag()
+
+    // MARK: - UI Components
     private let saveTokenButton = DSButton(style: .primary, title: "Save API Token to Keychain")
     private let testButton = DSButton(style: .primary, title: "Fetch Now Playing Movies")
     private let resultLabel: UILabel = {
@@ -23,26 +31,28 @@ public final class HomeViewController: UIViewController {
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 14)
         label.textColor = .label
-        label.text = "Press 'Save API Token' first, then fetch movies"
         return label
     }()
-    
-    public init(useCase: HomeUseCase) {
-        self.useCase = useCase
+
+    // MARK: - Init
+    public init(viewModel: HomeViewModel) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    // MARK: - Lifecycle
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupLayout()
-        setupActions()
+        bindViewModel()
     }
-    
+
+    // MARK: - Setup UI
     private func setupUI() {
         view.backgroundColor = DesignSystemColor.background
         view.addSubview(saveTokenButton)
@@ -72,61 +82,28 @@ public final class HomeViewController: UIViewController {
         }
     }
 
-    private func setupActions() {
-        saveTokenButton.addTarget(self, action: #selector(saveTokenTapped), for: .touchUpInside)
-        testButton.addTarget(self, action: #selector(fetchMoviesTapped), for: .touchUpInside)
-    }
+    // MARK: - Bind ViewModel
+    private func bindViewModel() {
+        // Input
+        let input = HomeViewModel.Input(
+            saveTokenTapped: saveTokenButton.rx.tap.asObservable(),
+            fetchMoviesTapped: testButton.rx.tap.asObservable()
+        )
 
-    @objc private func saveTokenTapped() {
-        guard let token = Bundle.main.object(forInfoDictionaryKey: "TMDB_ACCESS_TOKEN") as? String else {
-            resultLabel.text = "❌ Error: TMDB_ACCESS_TOKEN not found in Info.plist"
-            return
-        }
+        // Output
+        let output = viewModel.transform(input: input)
 
-        let keyStore = KeychainAPIKeyStore()
+        // Bind resultText to label
+        output.resultText
+            .drive(resultLabel.rx.text)
+            .disposed(by: disposeBag)
 
-        do {
-            try keyStore.save(token)
-            resultLabel.text = "✅ API Token saved to Keychain successfully!"
-        } catch {
-            resultLabel.text = "❌ Failed to save token:\n\(error.localizedDescription)"
-        }
-    }
-
-    @objc private func fetchMoviesTapped() {
-        resultLabel.text = "Loading..."
-
-        let useCase = self.useCase
-
-        Task { [weak self] in
-            guard let self else { return }
-
-            do {
-                let entity = try await useCase.fetchNowPlayingMovies(page: 1)
-
-                await MainActor.run {
-                    let movieCount = entity.results.count
-                    let firstMovie = entity.results.first
-
-                    var resultText = "✅ Success!\n\n"
-                    resultText += "Total Results: \(entity.totalResults)\n"
-                    resultText += "Total Pages: \(entity.totalPages)\n"
-                    resultText += "Current Page: \(entity.page)\n"
-                    resultText += "Movies Loaded: \(movieCount)\n\n"
-
-                    if let movie = firstMovie {
-                        resultText += "First Movie:\n"
-                        resultText += "Title: \(movie.title)\n"
-                        resultText += "Release: \(movie.releaseDate)"
-                    }
-
-                    self.resultLabel.text = resultText
-                }
-            } catch {
-                await MainActor.run {
-                    self.resultLabel.text = "❌ Error:\n\(error.localizedDescription)"
-                }
-            }
-        }
+        // Bind loading state (optional - can be used for activity indicator)
+        output.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.testButton.isEnabled = !isLoading
+                self?.saveTokenButton.isEnabled = !isLoading
+            })
+            .disposed(by: disposeBag)
     }
 }

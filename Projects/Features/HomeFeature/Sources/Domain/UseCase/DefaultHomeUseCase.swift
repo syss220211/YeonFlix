@@ -9,8 +9,6 @@
 import CoreModels
 import CoreNetwork
 
-import RxSwift
-
 public protocol HomeUseCase {
     func fetchNowPlayingMovies(page: Int) async throws -> NowPlayingEntity
 }

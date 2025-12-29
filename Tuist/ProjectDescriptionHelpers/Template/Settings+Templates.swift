@@ -14,20 +14,29 @@ public extension Settings {
                 "SWIFT_VERSION": "6.0",
                 // Swift 버전 고정
                 "IPHONEOS_DEPLOYMENT_TARGET": "16.0", // 최소 지원 타겟 고정,
-                "OTHER_LDFLAGS": "-ObjC", // 카테고리나 메타데이터가 포함된 정적 라이브러리의 코드가 런타임에 정상 동작하도록 설정
+                "OTHER_SWIFT_FLAGS": [
+                    "$(inherited)",
+                    "-DMYCUSTOMFLAG"
+                ]
             ],
             configurations: [
                 .debug(
                     name: .debug,
                     settings: [
-                        "OTHER_SWIFT_FLAGS": "-DDEBUG", //  #if DEBUG 조건을 가능하도록 설정
+                        "OTHER_SWIFT_FLAGS": [
+                            "$(inherited)",
+                            "-DDEBUG"
+                        ]
                     ],
                     xcconfig: .relativeToRoot("Tuist/Config/Secrets.xcconfig")
                 ),
                 .release(
                     name: .release,
                     settings: [
-                        "OTHER_SWIFT_FLAGS": ["-DRELEASE"], // Swift 코드에서 #if RELEASE 조건을 가능하게 함
+                        "OTHER_SWIFT_FLAGS": [
+                            "$(inherited)",
+                            "-DRELEASE"
+                        ]
                     ],
                     xcconfig: .relativeToRoot("Tuist/Config/Secrets.xcconfig")
                 )

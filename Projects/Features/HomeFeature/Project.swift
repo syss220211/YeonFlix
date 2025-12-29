@@ -16,6 +16,7 @@ let homeFeatureProject = Project.makeFeatureModule(
         .project(target: "CoreUtils", path: "../../Core/CoreUtils"),
         .project(target: "CoreCommonUI", path: "../../Core/CoreCommonUI"),
         .project(target: "DesignSystem", path: "../../DesignSystem"),
-        .external(name: "RxSwift")
+        .project(target: "CoreSecurity", path: "../../Core/CoreSecurity"),
+        .project(target: "CoreRx", path: "../../Core/CoreRx"),
     ]
 )

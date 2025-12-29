@@ -12,6 +12,6 @@ let project = Project.makeAppModule(
     name: "YeonFlixApp",
     dependencies: [
         .project(target: "HomeFeature", path: "../Features/HomeFeature"),
-        .project(target: "SearchFeature", path: "../Features/SearchFeature"),
+        .project(target: "SearchFeature", path: "../Features/SearchFeature")
     ]
 )

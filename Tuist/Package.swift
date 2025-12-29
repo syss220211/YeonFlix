@@ -17,6 +17,6 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "7.10.0"),
         .package(url: "https://github.com/SnapKit/SnapKit", from: "5.7.1"),
-        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.6.0")
+        .package(url: "https://github.com/ReactiveX/RxSwift.git", from: "6.8.0")
       ]
 )
