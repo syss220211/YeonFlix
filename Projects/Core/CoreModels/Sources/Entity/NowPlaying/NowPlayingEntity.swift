@@ -35,4 +35,12 @@ public struct NowPlayingEntity: Decodable, Sendable {
         self.totalPages = totalPages
         self.totalResults = totalResults
     }
+    
+    public init() {
+        self.dates = .init()
+        self.page = 0
+        self.results = []
+        self.totalPages = 0
+        self.totalResults = 0
+    }
 }

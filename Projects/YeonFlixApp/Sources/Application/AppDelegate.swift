@@ -21,8 +21,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         window = UIWindow(frame: UIScreen.main.bounds)
 
-        let homeVC = HomeViewController()
-        let nav = UINavigationController(rootViewController: homeVC)
+        let diContainer = AppDIContainer()
+        let homeVC = HomeViewModel(useCase: diContainer.makeHomeFeatureDIContainer().makeHomeUseCase())
+        let homeView = HomeViewController(viewModel: homeVC)
+        let nav = UINavigationController(rootViewController: homeView)
 
         window?.rootViewController = nav
         window?.makeKeyAndVisible()

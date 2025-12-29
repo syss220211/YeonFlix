@@ -11,4 +11,17 @@ import Foundation
 public struct DateEntity: Decodable, Sendable {
     public let maximum: String
     public let minimum: String
+    
+    public init(
+        maximum: String,
+        minimum: String
+    ) {
+        self.maximum = maximum
+        self.minimum = minimum
+    }
+    
+    public init() {
+        self.maximum = ""
+        self.minimum = ""
+    }
 }

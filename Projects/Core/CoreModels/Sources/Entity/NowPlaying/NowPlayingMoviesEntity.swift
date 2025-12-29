@@ -18,4 +18,44 @@ public struct NowPlayingMoviesEntity: Decodable, Sendable {
     public let genreIds: [Int]
     public let popularity: Double
     public let adult: Bool
+    
+    public init(
+        id: Int,
+        title: String,
+        overview: String,
+        posterPath: String?,
+        backdropPath: String?,
+        releaseDate: String?,
+        voteAverage: Double,
+        voteCount: Int,
+        genreIds: [Int],
+        popularity: Double,
+        adult: Bool
+    ) {
+        self.id = id
+        self.title = title
+        self.overview = overview
+        self.posterPath = posterPath
+        self.backdropPath = backdropPath
+        self.releaseDate = releaseDate
+        self.voteAverage = voteAverage
+        self.voteCount = voteCount
+        self.genreIds = genreIds
+        self.popularity = popularity
+        self.adult = adult
+    }
+    
+    public init() {
+        self.id = 0
+        self.title = ""
+        self.overview = ""
+        self.posterPath = ""
+        self.backdropPath = ""
+        self.releaseDate = ""
+        self.voteAverage = 0.0
+        self.voteCount = 0
+        self.genreIds = []
+        self.popularity = 0.0
+        self.adult = true
+    }
 }
