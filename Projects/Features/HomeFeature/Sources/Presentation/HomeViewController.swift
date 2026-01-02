@@ -1,5 +1,5 @@
 //
-//  HomeFeatureTest.swift
+//  HomeViewController.swift
 //  Manifests
 //
 //  Created by 박서연 on 11/26/25.
@@ -18,13 +18,13 @@ import RxCocoa
 
 public final class HomeViewController: UIViewController {
 
-    // MARK: - Properties
     private let viewModel: HomeViewModel
-    private let disposeBag = DisposeBag()
+    public let disposeBag = DisposeBag()
 
-    // MARK: - UI Components
     private let saveTokenButton = DSButton(style: .primary, title: "Save API Token to Keychain")
     private let testButton = DSButton(style: .primary, title: "Fetch Now Playing Movies")
+    private let navigationButton = DSButton(style: .primary, title: "Movie! Detail")
+    
     private let resultLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
@@ -33,8 +33,7 @@ public final class HomeViewController: UIViewController {
         label.textColor = .label
         return label
     }()
-
-    // MARK: - Init
+    
     public init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -44,7 +43,6 @@ public final class HomeViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -52,11 +50,11 @@ public final class HomeViewController: UIViewController {
         bindViewModel()
     }
 
-    // MARK: - Setup UI
     private func setupUI() {
         view.backgroundColor = DesignSystemColor.background
         view.addSubview(saveTokenButton)
         view.addSubview(testButton)
+        view.addSubview(navigationButton)
         view.addSubview(resultLabel)
     }
 
@@ -75,30 +73,33 @@ public final class HomeViewController: UIViewController {
             make.height.equalTo(52)
         }
 
+        navigationButton.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(testButton.snp.bottom).offset(20)
+            make.width.equalTo(250)
+            make.height.equalTo(52)
+        }
+
         resultLabel.snp.makeConstraints { make in
-            make.top.equalTo(testButton.snp.bottom).offset(40)
+            make.top.equalTo(navigationButton.snp.bottom).offset(40)
             make.leading.equalToSuperview().offset(20)
             make.trailing.equalToSuperview().offset(-20)
         }
     }
 
-    // MARK: - Bind ViewModel
     private func bindViewModel() {
-        // Input
         let input = HomeViewModel.Input(
             saveTokenTapped: saveTokenButton.rx.tap.asObservable(),
-            fetchMoviesTapped: testButton.rx.tap.asObservable()
+            fetchMoviesTapped: testButton.rx.tap.asObservable(),
+            movieDetailTapped: navigationButton.rx.tap.map { 12345 }
         )
 
-        // Output
         let output = viewModel.transform(input: input)
 
-        // Bind resultText to label
         output.resultText
             .drive(resultLabel.rx.text)
             .disposed(by: disposeBag)
 
-        // Bind loading state (optional - can be used for activity indicator)
         output.isLoading
             .drive(onNext: { [weak self] isLoading in
                 self?.testButton.isEnabled = !isLoading

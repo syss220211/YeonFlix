@@ -1,13 +1,12 @@
 //
-//  HomeFeatureDIContainer.swift
-//  YeonFlixApp
+//  HomeDIContainer.swift
+//  HomeFeature
 //
-//  Created by 박서연 on 12/27/25.
+//  Created by 박서연 on 12/30/25.
 //  Copyright © 2025 linda. All rights reserved.
 //
 
 import CoreNetwork
-import HomeFeature
 
 public final class HomeFeatureDIContainer {
     
@@ -19,12 +18,16 @@ public final class HomeFeatureDIContainer {
     
     // MARK: - Repository
     private func makeHomeRepository() -> HomeRepository {
-        return DefaultHomeRepository(remoteNetwork:
-                                        movieNetworkDataSource)
+        return DefaultHomeRepository(remoteNetwork: movieNetworkDataSource)
     }
     
     // MARK: - UseCase
     public func makeHomeUseCase() -> HomeUseCase {
         return DefaultHomeUseCase(repository: makeHomeRepository())
+    }
+    
+    // MARK: - ViewModel
+    public func makeHomeViewModel() -> HomeViewModel {
+        return HomeViewModel(useCase: self.makeHomeUseCase())
     }
 }

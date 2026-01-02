@@ -16,24 +16,22 @@ import RxCocoa
 
 public final class HomeViewModel {
 
-    // MARK: - Input
     struct Input {
         let saveTokenTapped: Observable<Void>
         let fetchMoviesTapped: Observable<Void>
+        let movieDetailTapped: Observable<Int>
     }
 
-    // MARK: - Output
     struct Output {
         let resultText: Driver<String>
         let isLoading: Driver<Bool>
     }
 
-    // MARK: - Properties
     private let useCase: HomeUseCase
     private let keyStore: APIKeyStore
     private let disposeBag = DisposeBag()
-
-    // MARK: - Init
+    public let routeToMovieDetail = PublishSubject<Int>()
+    
     public init(
         useCase: HomeUseCase,
         keyStore: APIKeyStore = KeychainAPIKeyStore()
@@ -49,14 +47,12 @@ public final class HomeViewModel {
             value: "Press 'Save API Token' first, then fetch movies"
         )
 
-        // Save Token
         input.saveTokenTapped
             .subscribe(onNext: { [weak self] in
                 self?.saveToken(to: resultTextRelay)
             })
             .disposed(by: disposeBag)
 
-        // Fetch Movies
         input.fetchMoviesTapped
             .do(onNext: {
                 resultTextRelay.accept("Loading...")
@@ -64,10 +60,8 @@ public final class HomeViewModel {
             })
             .flatMapLatest { [weak self] () -> Single<NowPlayingEntity> in
                 guard let self else { return .never() }
-                
+
                 nonisolated(unsafe) let useCase = self.useCase
-                
-                // ✅ RxSwift의 Swift Concurrency 지원 생성자 사용!
                 return Single.create {
                     try await useCase.fetchNowPlayingMovies(page: 1)
                 }
@@ -103,13 +97,18 @@ public final class HomeViewModel {
             )
             .disposed(by: disposeBag)
 
+        input.movieDetailTapped
+            .subscribe(onNext: { [weak self] movieID in
+                self?.routeToMovieDetail.onNext(movieID)
+            })
+            .disposed(by: disposeBag)
+
         return Output(
             resultText: resultTextRelay.asDriver(),
             isLoading: isLoadingRelay.asDriver()
         )
     }
 
-    // MARK: - Private Methods
     private func saveToken(to relay: BehaviorRelay<String>) {
         guard let token = Bundle.main.object(
             forInfoDictionaryKey: "TMDB_ACCESS_TOKEN"
@@ -124,5 +123,9 @@ public final class HomeViewModel {
         } catch {
             relay.accept("❌ Failed to save token:\n\(error.localizedDescription)")
         }
+    }
+    
+    public func didSelectMovie(id: Int) {
+        routeToMovieDetail.onNext(id)
     }
 }
