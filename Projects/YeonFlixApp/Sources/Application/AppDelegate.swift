@@ -11,24 +11,22 @@ import HomeFeature
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-    
-    var window: UIWindow?
-    
+
     func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-
-        window = UIWindow(frame: UIScreen.main.bounds)
-
-        let diContainer = AppDIContainer()
-        let homeVC = HomeViewModel(useCase: diContainer.makeHomeFeatureDIContainer().makeHomeUseCase())
-        let homeView = HomeViewController(viewModel: homeVC)
-        let nav = UINavigationController(rootViewController: homeView)
-
-        window?.rootViewController = nav
-        window?.makeKeyAndVisible()
-
         return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+        
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
     }
 }

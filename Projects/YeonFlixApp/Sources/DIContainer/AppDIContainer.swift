@@ -10,8 +10,9 @@ import Foundation
 
 import CoreNetwork
 import CoreSecurity
+import HomeFeature
 
-final class AppDIContainer {
+final public class AppDIContainer {
     
     // MARK: - Configuration
     private lazy var apiConfig: APIConfig = {
@@ -36,7 +37,7 @@ final class AppDIContainer {
         DefaultAuthHeaderProvider(keyStore: apiKeyStore)
     }()
     
-    // Network
+    // MARK: - Network
     private lazy var urlRequestBuilder: URLRequestBuilder = {
         DefaultURLRequestBuilder(authHeaderProvider: authHeaderProvider)
     }()
@@ -45,7 +46,7 @@ final class AppDIContainer {
         DefaultURLSessionProvider()
     }()
     
-    private lazy var networkService: NetworkService = {
+    public lazy var networkService: NetworkService = {
         DefaultNetworkService(
             config: apiConfig,
             requestBuilder: urlRequestBuilder,
@@ -54,17 +55,10 @@ final class AppDIContainer {
     }()
     
     // MARK: - DataSource
-    private lazy var movieNetworkDataSource: MovieNetworkDataSource = {
+    public lazy var movieNetworkDataSource: MovieNetworkDataSource = {
         DefaultMovieDataSource(
             networkService: networkService,
             apiConfig: apiConfig
         )
     }()
-    
-    // MARK: - Feature Containers
-    func makeHomeFeatureDIContainer() -> HomeFeatureDIContainer {
-        HomeFeatureDIContainer(
-            movieNetworkDataSource: movieNetworkDataSource
-        )
-    }
 }
