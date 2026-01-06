@@ -8,4 +8,10 @@
 import ProjectDescription
 import ProjectDescriptionHelpers
 
-let coreUtilsProject = Project.makeCoreModule(name: "CoreUtils", isResource: false)
+let coreUtilsProject = Project.makeCoreModule(
+    name: "CoreUtils",
+    isResource: false,
+    dependencies: [
+//        .project(target: "DesignSystem", path: "../../DesignSystem")
+    ]
+)
