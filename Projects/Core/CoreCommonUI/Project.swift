@@ -14,6 +14,7 @@ let CoreUIProject = Project.makeCoreModule(
     dependencies: [
         .external(name: "Kingfisher"),
         .external(name: "SnapKit"),
-        .project(target: "DesignSystem", path: "../../DesignSystem")
+        .project(target: "DesignSystem", path: "../../DesignSystem"),
+        .project(target: "CoreUtils", path: "../../Core/CoreUtils")
     ]
 )

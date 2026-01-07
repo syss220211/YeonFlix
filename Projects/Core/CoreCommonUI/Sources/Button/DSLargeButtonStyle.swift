@@ -9,6 +9,8 @@
 import UIKit
 import SnapKit
 
+import CoreUtils
+
 public final class DSLargeButton: UIButton {
 
     private let buttonStyle: DSLargeButtonStyle
@@ -52,8 +54,6 @@ public final class DSLargeButton: UIButton {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Layout
-
     private func setupLayout() {
         addSubview(activityIndicator)
 
@@ -62,7 +62,6 @@ public final class DSLargeButton: UIButton {
         }
     }
     
-    // MARK: - Initial Configuration (고정값)
     private func setupConfiguration() {
         var config = UIButton.Configuration.filled()
 
@@ -85,13 +84,10 @@ public final class DSLargeButton: UIButton {
                 return outgoing
             }
         
-        // 이미지 크기 고정
         let imageSize = buttonConfig.imageSize
         config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: imageSize)
         configuration = config
     }
-
-    // MARK: - State Handler (변하는 값)
 
     private func setupStateHandler() {
         configurationUpdateHandler = { [weak self] button in
@@ -110,8 +106,8 @@ public final class DSLargeButton: UIButton {
 
             config.background.backgroundColor = backgroundColor
             config.baseForegroundColor = foregroundColor
-            config.image?.withTintColor(foregroundColor)
-            config.image?.resizableImage(withCapInsets: .init(top: 8, left: 20, bottom: 8, right: 20))
+            config.image?.withRenderingMode(.alwaysTemplate)
+            
             config.titleTextAttributesTransformer =
                 UIConfigurationTextAttributesTransformer { incoming in
                     var outgoing = incoming
@@ -119,13 +115,15 @@ public final class DSLargeButton: UIButton {
                     outgoing.foregroundColor = foregroundColor
                     return outgoing
                 }
+            
+            config.imageColorTransformer = UIConfigurationColorTransformer({ _ in
+                foregroundColor
+            })
 
             button.configuration = config
             self.activityIndicator.color = foregroundColor
         }
     }
-
-    // MARK: - Loading State
 
     public func setLoading(_ loading: Bool) {
         guard isLoadingState != loading else { return }
@@ -152,8 +150,6 @@ public final class DSLargeButton: UIButton {
         setNeedsUpdateConfiguration()
     }
 
-    // MARK: - Layout Size
-
     public override var intrinsicContentSize: CGSize {
         let base = super.intrinsicContentSize
         return CGSize(width: base.width, height: buttonConfig.height)
@@ -168,8 +164,24 @@ extension DSLargeButton {
     }
 
     public func updateImage(_ image: UIImage?) {
+        guard let image else {
+            var config = configuration
+            config?.image = nil
+            configuration = config
+            return
+        }
+        
+        let resizedImage = image
+            .resized(
+                to: CGSize(
+                    width: buttonConfig.imageSize,
+                    height: buttonConfig.imageSize
+                )
+            )
+            .withRenderingMode(.alwaysTemplate)
+        
         var config = configuration
-        config?.image = image?.withRenderingMode(.alwaysTemplate)
+        config?.image = resizedImage
         configuration = config
     }
 }
