@@ -25,6 +25,7 @@ public final class HomeViewModel {
     struct Output {
         let resultText: Driver<String>
         let isLoading: Driver<Bool>
+        let isMoviesFetched: Driver<Bool>
     }
 
     private let useCase: HomeUseCase
@@ -43,6 +44,7 @@ public final class HomeViewModel {
     // MARK: - Transform
     func transform(input: Input) -> Output {
         let isLoadingRelay = BehaviorRelay<Bool>(value: false)
+        let isMoviesFetchedRelay = BehaviorRelay<Bool>(value: false)
         let resultTextRelay = BehaviorRelay<String>(
             value: "Press 'Save API Token' first, then fetch movies"
         )
@@ -90,9 +92,11 @@ public final class HomeViewModel {
                     }
 
                     resultTextRelay.accept(resultText)
+                    isMoviesFetchedRelay.accept(true)
                 },
                 onError: { error in
                     resultTextRelay.accept("❌ Error:\n\(error.localizedDescription)")
+                    isMoviesFetchedRelay.accept(false)
                 }
             )
             .disposed(by: disposeBag)
@@ -105,7 +109,8 @@ public final class HomeViewModel {
 
         return Output(
             resultText: resultTextRelay.asDriver(),
-            isLoading: isLoadingRelay.asDriver()
+            isLoading: isLoadingRelay.asDriver(),
+            isMoviesFetched: isMoviesFetchedRelay.asDriver()
         )
     }
 
