@@ -16,6 +16,7 @@ public enum DSImage {
     case fillPlay
     case info
     case search
+    case fillClose
 
     public var image: UIImage {
         UIImage(
@@ -34,6 +35,7 @@ public enum DSImage {
         case .fillPlay:    return "ic_fill_play"
         case .info:        return "ic_info"
         case .search:      return "ic_search"
+        case .fillClose:    return "ic_fill_grey_close"
         }
     }
 }
