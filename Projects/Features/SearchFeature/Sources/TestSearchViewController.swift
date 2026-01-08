@@ -44,8 +44,9 @@ public final class TestSearchViewController: UIViewController {
         label.numberOfLines = 0
         return label
     }()
-
-    // MARK: - Lifecycle
+    
+    private let rateButton = DSIconLabelButton(style: .featured)
+    
     public init() {
         super.init(nibName: nil, bundle: nil)
     }
@@ -65,14 +66,22 @@ public final class TestSearchViewController: UIViewController {
     // MARK: - Setup
     private func setupUI() {
         navigationItem.title = "Movie Search"
-        view.backgroundColor = DesignSystemColor.background
+        view.backgroundColor = .black
 
         view.addSubview(titleLabel)
         view.addSubview(searchBar)
         view.addSubview(searchResultLabel)
         view.addSubview(instructionLabel)
-
-//        searchBar.placeholder = "Search"
+        view.addSubview(rateButton)
+        
+        rateButton.setTitle("Rate")
+        rateButton.setImage(DSImage.emptyGood.image)
+        rateButton.addTarget(self, action: #selector(tappedRate), for: .touchUpInside)
+    }
+    
+    @objc
+    func tappedRate() {
+        print("RRRRATEAaTATAT")
     }
 
     private func setupLayout() {
@@ -96,6 +105,12 @@ public final class TestSearchViewController: UIViewController {
 
         instructionLabel.snp.makeConstraints { make in
             make.top.equalTo(searchResultLabel.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+        
+        rateButton.snp.makeConstraints { make in
+            make.top.equalTo(instructionLabel.snp.bottom).offset(5)
             make.leading.equalToSuperview().offset(20)
             make.trailing.equalToSuperview().offset(-20)
         }
