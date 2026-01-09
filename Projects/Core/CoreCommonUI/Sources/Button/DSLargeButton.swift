@@ -7,179 +7,181 @@
 //
 
 import UIKit
+import SnapKit
 
-import DesignSystem
+import CoreUtils
 
-public enum DSLargeButtonStyle {
-    case primaryOnboarding
-    case primaryApp
-    case secondaryApp
+public final class DSLargeButton: UIButton {
 
-    public struct StyleColors {
-        let enabledBackground: UIColor
-        let disabledBackground: UIColor
-        let enabledForeground: UIColor
-        let disabledForeground: UIColor
+    private let buttonStyle: DSButtonStyle
+    private let buttonConfig: DSButtonConfiguration
+
+    private let enabledBackgroundColor: UIColor
+    private let disabledBackgroundColor: UIColor
+    private let enabledForegroundColor: UIColor
+    private let disabledForegroundColor: UIColor
+
+    private var isLoadingState: Bool = false
+    private var originalTitle: String?
+
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+
+    public init(
+        buttonStyle: DSButtonStyle,
+        buttonConfig: DSButtonConfiguration = .medium
+    ) {
+        self.buttonStyle = buttonStyle
+        self.buttonConfig = buttonConfig
+        
+        let colors = buttonStyle.colors
+        self.enabledBackgroundColor = colors.enabledBackground
+        self.disabledBackgroundColor = colors.disabledBackground
+        self.enabledForegroundColor = colors.enabledForeground
+        self.disabledForegroundColor = colors.disabledForeground
+
+        super.init(frame: .zero)
+
+        setupLayout()
+        setupConfiguration()
+        setupStateHandler()
     }
 
-    public var colors: StyleColors {
-        switch self {
-        case .primaryOnboarding:
-            return StyleColors(
-                enabledBackground: DesignSystemColor.primaryRed,
-                disabledBackground: DesignSystemColor.neutralGreyLight1,
-                enabledForeground: .white,
-                disabledForeground: .white
-            )
-            
-        case .primaryApp:
-            return StyleColors(
-                enabledBackground: .white,
-                disabledBackground: .white,
-                enabledForeground: .black,
-                disabledForeground: DesignSystemColor.neutralGreyLight2
-            )
-            
-        case .secondaryApp:
-            return StyleColors(
-                enabledBackground: .black,
-                disabledBackground: .black,
-                enabledForeground: .white,
-                disabledForeground: DesignSystemColor.neutralGrey
-            )
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupLayout() {
+        addSubview(activityIndicator)
+
+        activityIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
+    }
+    
+    private func setupConfiguration() {
+        var config = UIButton.Configuration.filled()
+
+        config.background.cornerRadius = buttonConfig.cornerRadius
+        config.contentInsets = NSDirectionalEdgeInsets(
+            top: buttonConfig.verticalPadding,
+            leading:  buttonConfig.horizontalPadding,
+            bottom: buttonConfig.verticalPadding,
+            trailing: buttonConfig.horizontalPadding
+        )
+
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.titleAlignment = .center
+        config.titleTextAttributesTransformer =
+            UIConfigurationTextAttributesTransformer { [weak self] incoming in
+                guard let self else { return incoming }
+                var outgoing = incoming
+                outgoing.font = self.buttonConfig.font.font
+                return outgoing
+            }
+        
+        let imageSize = buttonConfig.imageSize
+        config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: imageSize)
+        configuration = config
+    }
+
+    private func setupStateHandler() {
+        configurationUpdateHandler = { [weak self] button in
+            guard let self else { return }
+            guard var config = button.configuration else { return }
+
+            let isActive = button.isEnabled && !self.isLoadingState
+
+            let backgroundColor = isActive
+                ? self.enabledBackgroundColor
+                : self.disabledBackgroundColor
+
+            let foregroundColor = isActive
+                ? self.enabledForegroundColor
+                : self.disabledForegroundColor
+
+            config.background.backgroundColor = backgroundColor
+            config.baseForegroundColor = foregroundColor
+            config.image?.withRenderingMode(.alwaysTemplate)
+            
+            config.titleTextAttributesTransformer =
+                UIConfigurationTextAttributesTransformer { incoming in
+                    var outgoing = incoming
+                    outgoing.font = self.buttonConfig.font.font
+                    outgoing.foregroundColor = foregroundColor
+                    return outgoing
+                }
+            
+            config.imageColorTransformer = UIConfigurationColorTransformer({ _ in
+                foregroundColor
+            })
+
+            button.configuration = config
+            self.activityIndicator.color = foregroundColor
+        }
+    }
+
+    public func setLoading(_ loading: Bool) {
+        guard isLoadingState != loading else { return }
+        isLoadingState = loading
+
+        if loading {
+            originalTitle = configuration?.title
+            var config = configuration
+            config?.title = nil
+            config?.image = nil
+            configuration = config
+
+            activityIndicator.startAnimating()
+            isUserInteractionEnabled = false
+        } else {
+            var config = configuration
+            config?.title = originalTitle
+            configuration = config
+
+            activityIndicator.stopAnimating()
+            isUserInteractionEnabled = true
+        }
+
+        setNeedsUpdateConfiguration()
+    }
+
+    public override var intrinsicContentSize: CGSize {
+        let base = super.intrinsicContentSize
+        return CGSize(width: base.width, height: buttonConfig.height)
     }
 }
 
-// MARK: - Button Size Definition
-public enum DSLargeButtonConfiguration {
-    case small
-    case medium
-    case large
-    
-    public var height: CGFloat {
-        switch self {
-        case .small: return 30
-        case .medium: return 34
-        case .large: return 44
-        }
+extension DSLargeButton {
+    public func updateTitle(_ title: String?) {
+        var config = configuration
+        config?.title = title
+        configuration = config
     }
-    
-    public var font: YTypography {
-        switch self {
-        case .small, .medium:
-            return .init(role: .label3, weight: .medium)
-        case .large:
-            return .init(role: .label2, weight: .medium)
+
+    public func updateImage(_ image: UIImage?) {
+        guard let image else {
+            var config = configuration
+            config?.image = nil
+            configuration = config
+            return
         }
-    }
-    
-    public var cornerRadius: CGFloat {
-        switch self {
-        case .large, .small:
-            return 2
-        case .medium:
-            return 4
-        }
-    }
-    
-    public var verticalPadding: CGFloat {
-        switch self {
-        case .large: return 12
-        case .medium: return 8
-        case .small: return 6
-        }
-    }
-    
-    public var horizontalPadding: CGFloat {
-        return 20
-    }
-    
-    public var imageSize: CGFloat {
-        switch self {
-        case .small, .medium: return 18
-        case .large: return 20
-        }
+        
+        let resizedImage = image
+            .resized(
+                to: CGSize(
+                    width: buttonConfig.imageSize,
+                    height: buttonConfig.imageSize
+                )
+            )
+            .withRenderingMode(.alwaysTemplate)
+        
+        var config = configuration
+        config?.image = resizedImage
+        configuration = config
     }
 }
-
-
-//public enum CustomButtonStyle {
-//    case primaryOnboarding
-//    case primaryApp
-//    case secondaryApp
-//
-//    public struct StyleColors {
-//        let enabledBackground: UIColor
-//        let disabledBackground: UIColor
-//        let enabledForeground: UIColor
-//        let disabledForeground: UIColor
-//    }
-//
-//    public var colors: StyleColors {
-//        switch self {
-//        case .primaryOnboarding:
-//            return StyleColors(
-//                enabledBackground: UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0), // Red
-//                disabledBackground: UIColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0), // Grey
-//                enabledForeground: .white,
-//                disabledForeground: .white
-//            )
-//            
-//        case .primaryApp:
-//            return StyleColors(
-//                enabledBackground: .black,
-//                disabledBackground: .black,
-//                enabledForeground: .white,
-//                disabledForeground: UIColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0) // Grey
-//            )
-//            
-//        case .secondaryApp:
-//            return StyleColors(
-//                enabledBackground: .white,
-//                disabledBackground: .white,
-//                enabledForeground: .black,
-//                disabledForeground: UIColor(red: 0.6, green: 0.6, blue: 0.6, alpha: 1.0) // Grey
-//            )
-//        }
-//    }
-//}
-//
-//// MARK: - Button Size Definition
-//public enum CustomButtonSize {
-//    case small
-//    case medium
-//    case large
-//
-//    public var height: CGFloat {
-//        switch self {
-//        case .small: return 40
-//        case .medium: return 48
-//        case .large: return 56
-//        }
-//    }
-//    
-//    public var fontSize: CGFloat {
-//        switch self {
-//        case .small: return 14
-//        case .medium: return 16
-//        case .large: return 18
-//        }
-//    }
-//
-//    public var cornerRadius: CGFloat {
-//        switch self {
-//        case .small: return 8
-//        case .medium: return 12
-//        case .large: return 16
-//        }
-//    }
-//
-//    public var horizontalPadding: CGFloat {
-//        switch self {
-//        case .small: return 16
-//        case .medium: return 24
-//        case .large: return 32
-//        }
-//    }
-//}
