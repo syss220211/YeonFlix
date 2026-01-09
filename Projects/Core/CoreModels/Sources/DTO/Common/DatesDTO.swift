@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct DatesDTO: Decodable {
+public struct DatesDTO: Decodable, Sendable {
     public let maximum: String
     public let minimum: String
 }

@@ -1,12 +1,17 @@
 //
-//  NowPlayingMoviesEntity.swift
+//  NowPlayingEntity.swift
 //  CoreModels
 //
 //  Created by 박서연 on 12/23/25.
 //  Copyright © 2025 linda. All rights reserved.
 //
 
-public struct NowPlayingMoviesEntity: Decodable, Sendable {
+import Foundation
+
+/// /movie/now_playing의 Entity 입니다.
+typealias  NowPlayingListEntity = PaginatedEntity<NowPlayingMoviesEntity>
+
+public struct NowPlayingMoviesEntity: Sendable {
     public let id: Int
     public let title: String
     public let overview: String

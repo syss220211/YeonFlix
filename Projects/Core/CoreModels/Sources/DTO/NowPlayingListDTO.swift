@@ -1,5 +1,5 @@
 //
-//  NowPlayMoviesDTO.swift
+//  NowPlayingListDTO.swift
 //  CoreModels
 //
 //  Created by 박서연 on 12/23/25.
@@ -8,7 +8,22 @@
 
 import Foundation
 
-public struct NowPlayMoviesDTO: Decodable {
+/// /movie/now_playing의 Response DTO 입니다.
+typealias NowPlayingListDTO = PaginatedResponse<NowPlayMoviesDTO>
+
+public extension NowPlayingListDTO {
+    func toDomain() -> PaginatedEntity<NowPlayingMoviesEntity> {
+        return PaginatedEntity<NowPlayingMoviesEntity>(
+            page: self.page,
+            results: self.results.map({ $0.toDomain() }),
+            totalPages: self.totalPages,
+            totalResults: self.totalResults,
+            dates: self.dates?.toDomain()
+        )
+    }
+}
+
+public struct NowPlayMoviesDTO: Decodable, Sendable {
     public let id: Int
     public let title: String
     public let overview: String

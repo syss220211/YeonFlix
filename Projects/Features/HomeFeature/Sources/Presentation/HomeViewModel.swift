@@ -60,7 +60,7 @@ public final class HomeViewModel {
                 resultTextRelay.accept("Loading...")
                 isLoadingRelay.accept(true)
             })
-            .flatMapLatest { [weak self] () -> Single<NowPlayingEntity> in
+            .flatMapLatest { [weak self] () -> Single<PaginatedEntity<NowPlayingMoviesEntity>> in
                 guard let self else { return .never() }
 
                 nonisolated(unsafe) let useCase = self.useCase
@@ -75,20 +75,20 @@ public final class HomeViewModel {
                 onError: { _ in isLoadingRelay.accept(false) }
             )
             .subscribe(
-                onNext: { entity in
-                    let movieCount = entity.results.count
-                    let firstMovie = entity.results.first
+                onNext: { paginatedEntity in
+                    let movieCount = paginatedEntity.results.count
+                    let firstMovie = paginatedEntity.results.first
 
                     var resultText = "✅ Success!\n\n"
-                    resultText += "Total Results: \(entity.totalResults)\n"
-                    resultText += "Total Pages: \(entity.totalPages)\n"
-                    resultText += "Current Page: \(entity.page)\n"
+                    resultText += "Total Results: \(paginatedEntity.totalResults)\n"
+                    resultText += "Total Pages: \(paginatedEntity.totalPages)\n"
+                    resultText += "Current Page: \(paginatedEntity.page)\n"
                     resultText += "Movies Loaded: \(movieCount)\n\n"
 
                     if let movie = firstMovie {
                         resultText += "First Movie:\n"
                         resultText += "Title: \(movie.title)\n"
-                        resultText += "Release: \(movie.releaseDate)"
+                        resultText += "Release: \(movie.releaseDate ?? "N/A")"
                     }
 
                     resultTextRelay.accept(resultText)
