@@ -39,7 +39,7 @@ final class TabBarCoordinator {
             )
         )
         
-        searchCoordinator = SearchCoordinator()
+        searchCoordinator = SearchCoordinator(navigationController: searchNav)
 
 //        myPageCoordinator = MyPageCoordinator(
 //            navigationController: myPageNav,

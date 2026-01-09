@@ -24,6 +24,15 @@ public final class HomeViewController: UIViewController {
     private let saveTokenButton = DSButton(style: .primary, title: "Save API Token to Keychain")
     private let testButton = DSButton(style: .primary, title: "Fetch Now Playing Movies")
     private let navigationButton = DSButton(style: .primary, title: "Movie! Detail")
+
+    private let customButtonPrimaryApp = DSLargeButton(buttonStyle: .primaryOnboarding, buttonConfig: .large)
+    private let customButtonPrimaryOnboarding = DSLargeButton(buttonStyle: .primaryApp, buttonConfig: .medium)
+    private let customButtonSecondaryApp = DSLargeButton(buttonStyle: .secondaryApp, buttonConfig: .small)
+
+    @objc
+    func secondaryTapped() {
+        print("isItPossibileTapp?")
+    }
     
     private let resultLabel: UILabel = {
         let label = UILabel()
@@ -55,7 +64,16 @@ public final class HomeViewController: UIViewController {
         view.addSubview(saveTokenButton)
         view.addSubview(testButton)
         view.addSubview(navigationButton)
+        view.addSubview(customButtonPrimaryApp)
+        view.addSubview(customButtonPrimaryOnboarding)
+        view.addSubview(customButtonSecondaryApp)
         view.addSubview(resultLabel)
+
+        customButtonPrimaryApp.updateTitle("Primary App Style")
+        customButtonPrimaryOnboarding.updateTitle("Primary Onboarding Style")
+        customButtonSecondaryApp.updateTitle("Secondary App Style")
+        customButtonSecondaryApp.updateImage(DSImage.search.image)
+        customButtonSecondaryApp.addTarget(self, action: #selector(secondaryTapped), for: .touchUpInside)
     }
 
     private func setupLayout() {
@@ -80,8 +98,29 @@ public final class HomeViewController: UIViewController {
             make.height.equalTo(52)
         }
 
+        customButtonPrimaryApp.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(navigationButton.snp.bottom).offset(20)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+
+        customButtonPrimaryOnboarding.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(customButtonPrimaryApp.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+
+        customButtonSecondaryApp.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(customButtonPrimaryOnboarding.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+
         resultLabel.snp.makeConstraints { make in
-            make.top.equalTo(navigationButton.snp.bottom).offset(40)
+            make.top.equalTo(customButtonSecondaryApp.snp.bottom).offset(40)
             make.leading.equalToSuperview().offset(20)
             make.trailing.equalToSuperview().offset(-20)
         }
@@ -104,6 +143,14 @@ public final class HomeViewController: UIViewController {
             .drive(onNext: { [weak self] isLoading in
                 self?.testButton.isEnabled = !isLoading
                 self?.saveTokenButton.isEnabled = !isLoading
+            })
+            .disposed(by: disposeBag)
+
+        output.isMoviesFetched
+            .drive(onNext: { [weak self] isFetched in
+                self?.customButtonPrimaryApp.isEnabled = isFetched
+                self?.customButtonPrimaryOnboarding.isEnabled = isFetched
+                self?.customButtonSecondaryApp.isEnabled = isFetched
             })
             .disposed(by: disposeBag)
     }
