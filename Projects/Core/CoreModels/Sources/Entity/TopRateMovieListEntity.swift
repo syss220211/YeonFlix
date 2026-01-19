@@ -8,7 +8,7 @@
 
 typealias TopRateMovieListEntity = PaginatedEntity<TopRateMovieEntity>
 
-public struct TopRateMovieEntity: Sendable {
+public struct TopRateMovieEntity: Sendable, Hashable {
     public let adult: Bool
     public let backdropPath: String?
     public let genreIDs: [Int]

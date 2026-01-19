@@ -11,7 +11,7 @@ import Foundation
 /// /movie/now_playing의 Entity 입니다.
 typealias  NowPlayingListEntity = PaginatedEntity<NowPlayingMoviesEntity>
 
-public struct NowPlayingMoviesEntity: Sendable {
+public struct NowPlayingMoviesEntity: Sendable, Hashable {
     public let id: Int
     public let title: String
     public let overview: String

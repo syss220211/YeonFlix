@@ -34,11 +34,11 @@ public final class HomeCoordinator {
         let vm = diContainer.makeHomeViewModel()
         let vc = HomeViewController(viewModel: vm)
         
-        vm.routeToMovieDetail
-            .subscribe(onNext: { [weak self] movieID in
-                self?.delegate?.homeCoordinatorDidRequestMovieDetail(movieID)
-            })
-            .disposed(by: vc.disposeBag)
+//        vm.routeToMovieDetail
+//            .subscribe(onNext: { [weak self] movieID in
+//                self?.delegate?.homeCoordinatorDidRequestMovieDetail(movieID)
+//            })
+//            .disposed(by: vc.disposeBag)
         
         navigationController?.pushViewController(vc, animated: true)
     }

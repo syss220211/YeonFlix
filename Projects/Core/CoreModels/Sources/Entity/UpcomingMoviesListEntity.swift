@@ -10,7 +10,7 @@ import Foundation
 
 typealias UpcomingMoviesListEntity = PaginatedEntity<UpcomingMoviesEntity>
 
-public struct UpcomingMoviesEntity: Sendable {
+public struct UpcomingMoviesEntity: Sendable, Hashable {
     public let adult: Bool
     public let backdropPath: String?
     public let genreIDs: [Int]
