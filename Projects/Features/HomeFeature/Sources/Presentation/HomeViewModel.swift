@@ -20,8 +20,7 @@ struct HomePosterItem: Hashable {
 
 @MainActor
 final public class HomeViewModel {
-
-    // MARK: - Input / Output
+    
     struct Input {
         let viewDidLoad: Observable<Void>
         let refresh: Observable<Void>
@@ -37,18 +36,15 @@ final public class HomeViewModel {
         let errorMessage: Signal<String>
     }
 
-    // MARK: - Dependencies
     private let useCase: HomeUseCase
 
-    // MARK: - State
     private let nowPlayingRelay = BehaviorRelay<[HomePosterItem]>(value: [])
     private let popularRelay = BehaviorRelay<[HomePosterItem]>(value: [])
     private let topRatedRelay = BehaviorRelay<[HomePosterItem]>(value: [])
     private let upcomingRelay = BehaviorRelay<[HomePosterItem]>(value: [])
-
+    
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorRelay = PublishRelay<String>()
-
     private let disposeBag = DisposeBag()
 
     public init(useCase: HomeUseCase) {
@@ -57,11 +53,11 @@ final public class HomeViewModel {
     
     @MainActor
     func transform(input: Input) -> Output {
-
-        // 최초 진입 + refresh 모두 "첫 페이지 다시 로드"
+        // View단의 이벤트 viewDidLoad, refresh 하나의 스트림으로 합침
         let loadTrigger = Observable.merge(input.viewDidLoad, input.refresh)
 
         loadTrigger
+            // loadTrigger가 한 번이라도 발생하면 fetchAllFirstPages 함수 싫행
             .flatMapLatest { [weak self] _ -> Observable<Void> in
                 guard let self else { return .empty() }
                 return self.fetchAllFirstPages()
@@ -69,6 +65,7 @@ final public class HomeViewModel {
             .subscribe()
             .disposed(by: disposeBag)
 
+        // VC에게 사용할 상태들을 리턴 (Output)
         return Output(
             nowPlaying: nowPlayingRelay.asDriver(),
             popular: popularRelay.asDriver(),
@@ -89,18 +86,18 @@ final public class HomeViewModel {
         let top = fetchTopRated(page: 1)
         let upc = fetchUpcoming(page: 1)
 
+        // 4개가 모두 성공했을 때 한 번에 결과를 묶어줌 (하나라도 실패하면 zip 전체가 실패)
         return Single.zip(now, pop, top, upc)
             .do(
+                // zip이 성공한 경우 items들이 생성되며 Relay들에게 .accept으로 값을 넣어줌
                 onSuccess: { [weak self] nowItems, popItems, topItems, upcItems in
                     guard let self else { return }
+                    // Relay 상태 저장을 하고 변경 이벤트들을 방출함
                     self.nowPlayingRelay.accept(nowItems)
                     self.popularRelay.accept(popItems)
                     self.topRatedRelay.accept(topItems)
                     self.upcomingRelay.accept(upcItems)
                 },
-//                onFailure: { [weak self] error in
-//                    self?.errorRelay.accept(error.localizedDescription)
-//                },
                 onDispose: { [weak self] in
                     self?.isLoadingRelay.accept(false)
                 }
@@ -173,124 +170,3 @@ final public class HomeViewModel {
         }
     }
 }
-
-//public final class HomeViewModel {
-//
-//    struct Input {
-//        let saveTokenTapped: Observable<Void>
-//        let fetchMoviesTapped: Observable<Void>
-//        let movieDetailTapped: Observable<Int>
-//    }
-//
-//    struct Output {
-//        let resultText: Driver<String>
-//        let isLoading: Driver<Bool>
-//        let isMoviesFetched: Driver<Bool>
-//    }
-//
-//    private let useCase: HomeUseCase
-//    private let keyStore: APIKeyStore
-//    private let disposeBag = DisposeBag()
-//    public let routeToMovieDetail = PublishSubject<Int>()
-//    
-//    public init(
-//        useCase: HomeUseCase,
-//        keyStore: APIKeyStore = KeychainAPIKeyStore()
-//    ) {
-//        self.useCase = useCase
-//        self.keyStore = keyStore
-//    }
-//
-//    // MARK: - Transform
-//    func transform(input: Input) -> Output {
-//        let isLoadingRelay = BehaviorRelay<Bool>(value: false)
-//        let isMoviesFetchedRelay = BehaviorRelay<Bool>(value: false)
-//        let resultTextRelay = BehaviorRelay<String>(
-//            value: "Press 'Save API Token' first, then fetch movies"
-//        )
-//
-//        input.saveTokenTapped
-//            .subscribe(onNext: { [weak self] in
-//                self?.saveToken(to: resultTextRelay)
-//            })
-//            .disposed(by: disposeBag)
-//
-//        input.fetchMoviesTapped
-//            .do(onNext: {
-//                resultTextRelay.accept("Loading...")
-//                isLoadingRelay.accept(true)
-//            })
-//            .flatMapLatest { [weak self] () -> Single<PaginatedEntity<NowPlayingMoviesEntity>> in
-//                guard let self else { return .never() }
-//
-//                nonisolated(unsafe) let useCase = self.useCase
-//                return Single.create {
-//                    try await useCase.fetchNowPlayingMovies(page: 1)
-//                }
-//            }
-//            .asObservable()
-//            .observe(on: MainScheduler.instance)
-//            .do(
-//                onNext: { _ in isLoadingRelay.accept(false) },
-//                onError: { _ in isLoadingRelay.accept(false) }
-//            )
-//            .subscribe(
-//                onNext: { paginatedEntity in
-//                    let movieCount = paginatedEntity.results.count
-//                    let firstMovie = paginatedEntity.results.first
-//
-//                    var resultText = "✅ Success!\n\n"
-//                    resultText += "Total Results: \(paginatedEntity.totalResults)\n"
-//                    resultText += "Total Pages: \(paginatedEntity.totalPages)\n"
-//                    resultText += "Current Page: \(paginatedEntity.page)\n"
-//                    resultText += "Movies Loaded: \(movieCount)\n\n"
-//
-//                    if let movie = firstMovie {
-//                        resultText += "First Movie:\n"
-//                        resultText += "Title: \(movie.title)\n"
-//                        resultText += "Release: \(movie.releaseDate ?? "N/A")"
-//                    }
-//
-//                    resultTextRelay.accept(resultText)
-//                    isMoviesFetchedRelay.accept(true)
-//                },
-//                onError: { error in
-//                    resultTextRelay.accept("❌ Error:\n\(error.localizedDescription)")
-//                    isMoviesFetchedRelay.accept(false)
-//                }
-//            )
-//            .disposed(by: disposeBag)
-//
-//        input.movieDetailTapped
-//            .subscribe(onNext: { [weak self] movieID in
-//                self?.routeToMovieDetail.onNext(movieID)
-//            })
-//            .disposed(by: disposeBag)
-//
-//        return Output(
-//            resultText: resultTextRelay.asDriver(),
-//            isLoading: isLoadingRelay.asDriver(),
-//            isMoviesFetched: isMoviesFetchedRelay.asDriver()
-//        )
-//    }
-//
-//    private func saveToken(to relay: BehaviorRelay<String>) {
-//        guard let token = Bundle.main.object(
-//            forInfoDictionaryKey: "TMDB_ACCESS_TOKEN"
-//        ) as? String else {
-//            relay.accept("❌ Error: TMDB_ACCESS_TOKEN not found in Info.plist")
-//            return
-//        }
-//
-//        do {
-//            try keyStore.save(token)
-//            relay.accept("✅ API Token saved to Keychain successfully!")
-//        } catch {
-//            relay.accept("❌ Failed to save token:\n\(error.localizedDescription)")
-//        }
-//    }
-//    
-//    public func didSelectMovie(id: Int) {
-//        routeToMovieDetail.onNext(id)
-//    }
-//}

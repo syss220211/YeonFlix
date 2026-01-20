@@ -18,7 +18,6 @@ import RxCocoa
 
 final class HomeViewController: UIViewController {
 
-    // MARK: - Section / Item
     enum Section: Int, CaseIterable, Hashable {
         case nowPlaying
         case popular
@@ -185,6 +184,7 @@ final class HomeViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
+        // Dirver들에서 방출하는 새로운 값들을 읽음
         Observable
             .combineLatest(
                 output.nowPlaying.asObservable(),
@@ -192,22 +192,28 @@ final class HomeViewController: UIViewController {
                 output.topRated.asObservable(),
                 output.upcoming.asObservable()
             )
-            .observe(on: MainScheduler.instance)
+            .observe(on: MainScheduler.instance) // 하위 작업들을 실행할 스레드 지정
             .bind(with: self) { owner, value in
+                // Subscribe의 UI 바인딩 버전, 스트림에서 값이 오면 값을 받아서 UI 갱신에 연결
                 let (now, pop, top, upc) = value
                 owner.applySnapshot(nowPlaying: now, popular: pop, topRated: top, upcoming: upc)
+                // 4개중에 하나라도 값이 바뀌는 순간 applySnapShot을 호출함
             }
             .disposed(by: disposeBag)
-
+        
+        // 로딩 상태가 바뀔때마다 UI와 연결
         output.isLoading
+        // viewModel의 driver가(isLoading: Driver<Bool>) 방출하는 상태값을 VC(UI에)에서 안전하게 바인딩
             .drive(with: self) { owner, isLoading in
                 if !isLoading, owner.refreshControl.isRefreshing {
+                    // 로딩이 끝났을 때 사용자가 당김 새로고침중이었다면 새로고침 UI를 종료함
                     owner.refreshControl.endRefreshing()
                 }
             }
             .disposed(by: disposeBag)
 
         output.errorMessage
+        // Signal: 한번 발생하고 끝나는 이벤트를 전달하기 위한 RxCocoa 타입, Signal 전용 bind가 emit
             .emit(with: self) { owner, message in
                 let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "확인", style: .default))
@@ -299,161 +305,3 @@ final class HomeSectionHeaderView: UICollectionReusableView {
         titleLabel.text = title
     }
 }
-
-//public final class HomeViewController: UIViewController {
-//    private let viewModel: HomeViewModel
-//    
-//    public init(viewModel: HomeViewModel) {
-//        self.viewModel = viewModel
-//        super.init(nibName: nil, bundle: nil)
-//    }
-//    
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//    
-//    public override func viewDidLoad() {
-//        super.viewDidLoad()
-//    }
-//}
-
-
-//public final class HomeViewController: UIViewController {
-//
-//    private let viewModel: HomeViewModel
-//    public let disposeBag = DisposeBag()
-//
-//    private let saveTokenButton = DSButton(style: .primary, title: "Save API Token to Keychain")
-//    private let testButton = DSButton(style: .primary, title: "Fetch Now Playing Movies")
-//    private let navigationButton = DSButton(style: .primary, title: "Movie! Detail")
-//
-//    private let customButtonPrimaryApp = DSLargeButton(buttonStyle: .primaryOnboarding, buttonConfig: .large)
-//    private let customButtonPrimaryOnboarding = DSLargeButton(buttonStyle: .primaryApp, buttonConfig: .medium)
-//    private let customButtonSecondaryApp = DSLargeButton(buttonStyle: .secondaryApp, buttonConfig: .small)
-//
-//    @objc
-//    func secondaryTapped() {
-//        print("isItPossibileTapp?")
-//    }
-//    
-//    private let resultLabel: UILabel = {
-//        let label = UILabel()
-//        label.numberOfLines = 0
-//        label.textAlignment = .center
-//        label.font = .systemFont(ofSize: 14)
-//        label.textColor = .label
-//        return label
-//    }()
-//    
-//    public init(viewModel: HomeViewModel) {
-//        self.viewModel = viewModel
-//        super.init(nibName: nil, bundle: nil)
-//    }
-//
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//
-//    public override func viewDidLoad() {
-//        super.viewDidLoad()
-//        setupUI()
-//        setupLayout()
-//        bindViewModel()
-//    }
-//
-//    private func setupUI() {
-//        view.backgroundColor = DesignSystemColor.background
-//        view.addSubview(saveTokenButton)
-//        view.addSubview(testButton)
-//        view.addSubview(navigationButton)
-//        view.addSubview(customButtonPrimaryApp)
-//        view.addSubview(customButtonPrimaryOnboarding)
-//        view.addSubview(customButtonSecondaryApp)
-//        view.addSubview(resultLabel)
-//
-//        customButtonPrimaryApp.updateTitle("Primary App Style")
-//        customButtonPrimaryOnboarding.updateTitle("Primary Onboarding Style")
-//        customButtonSecondaryApp.updateTitle("Secondary App Style")
-//        customButtonSecondaryApp.updateImage(DSImage.search.image)
-//        customButtonSecondaryApp.addTarget(self, action: #selector(secondaryTapped), for: .touchUpInside)
-//    }
-//
-//    private func setupLayout() {
-//        saveTokenButton.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.centerY.equalToSuperview().offset(-150)
-//            make.width.equalTo(250)
-//            make.height.equalTo(52)
-//        }
-//
-//        testButton.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.top.equalTo(saveTokenButton.snp.bottom).offset(20)
-//            make.width.equalTo(250)
-//            make.height.equalTo(52)
-//        }
-//
-//        navigationButton.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.top.equalTo(testButton.snp.bottom).offset(20)
-//            make.width.equalTo(250)
-//            make.height.equalTo(52)
-//        }
-//
-//        customButtonPrimaryApp.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.top.equalTo(navigationButton.snp.bottom).offset(20)
-//            make.leading.equalToSuperview().offset(20)
-//            make.trailing.equalToSuperview().offset(-20)
-//        }
-//
-//        customButtonPrimaryOnboarding.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.top.equalTo(customButtonPrimaryApp.snp.bottom).offset(16)
-//            make.leading.equalToSuperview().offset(20)
-//            make.trailing.equalToSuperview().offset(-20)
-//        }
-//
-//        customButtonSecondaryApp.snp.makeConstraints { make in
-//            make.centerX.equalToSuperview()
-//            make.top.equalTo(customButtonPrimaryOnboarding.snp.bottom).offset(16)
-//            make.leading.equalToSuperview().offset(20)
-//            make.trailing.equalToSuperview().offset(-20)
-//        }
-//
-//        resultLabel.snp.makeConstraints { make in
-//            make.top.equalTo(customButtonSecondaryApp.snp.bottom).offset(40)
-//            make.leading.equalToSuperview().offset(20)
-//            make.trailing.equalToSuperview().offset(-20)
-//        }
-//    }
-//
-//    private func bindViewModel() {
-//        let input = HomeViewModel.Input(
-//            saveTokenTapped: saveTokenButton.rx.tap.asObservable(),
-//            fetchMoviesTapped: testButton.rx.tap.asObservable(),
-//            movieDetailTapped: navigationButton.rx.tap.map { 12345 }
-//        )
-//
-//        let output = viewModel.transform(input: input)
-//
-//        output.resultText
-//            .drive(resultLabel.rx.text)
-//            .disposed(by: disposeBag)
-//
-//        output.isLoading
-//            .drive(onNext: { [weak self] isLoading in
-//                self?.testButton.isEnabled = !isLoading
-//                self?.saveTokenButton.isEnabled = !isLoading
-//            })
-//            .disposed(by: disposeBag)
-//
-//        output.isMoviesFetched
-//            .drive(onNext: { [weak self] isFetched in
-//                self?.customButtonPrimaryApp.isEnabled = isFetched
-//                self?.customButtonPrimaryOnboarding.isEnabled = isFetched
-//                self?.customButtonSecondaryApp.isEnabled = isFetched
-//            })
-//            .disposed(by: disposeBag)
-//    }
-//}
