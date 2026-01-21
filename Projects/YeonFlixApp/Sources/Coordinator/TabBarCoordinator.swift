@@ -62,9 +62,8 @@ final class TabBarCoordinator {
     }
 }
 
-extension TabBarCoordinator: HomeCoordinatorDelegate {
-    /// Home -> Movie Feature 으로 이동합니다.
-    func homeCoordinatorDidRequestMovieDetail(_ movieID: Int) {
+extension TabBarCoordinator: HomeViewControllerDelegate {
+    func homeViewControllerDidSelectedMovie(_ movieID: Int) {
         let movieCoordinator = MovieCoordinator(navigationController: homeCoordinator?.navigationController)
         movieCoordinator.movieHome(movieID)
     }

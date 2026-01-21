@@ -18,6 +18,7 @@ public final class MovieCoordinator {
     
     public func movieHome(_ movieID: Int) {
         let vc = MovieDetailViewController(movieID: movieID)
+        vc.hidesBottomBarWhenPushed = true
         navigationController?.pushViewController(vc, animated: true)
     }
 }

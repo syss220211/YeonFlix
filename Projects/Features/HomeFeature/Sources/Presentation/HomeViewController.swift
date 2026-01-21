@@ -44,6 +44,7 @@ final class HomeViewController: UIViewController {
         cv.alwaysBounceVertical = true
         return cv
     }()
+    
     private let refreshControl = UIRefreshControl()
     private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
     private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
@@ -51,6 +52,7 @@ final class HomeViewController: UIViewController {
     
     private let viewModel: HomeViewModel
     private let disposeBag = DisposeBag()
+    weak var delegate: HomeViewControllerDelegate?
     
     init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
@@ -220,5 +222,27 @@ final class HomeViewController: UIViewController {
                 owner.present(alert, animated: true)
             }
             .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .compactMap { [weak self] indexPath -> (IndexPath, Int)? in
+                guard let self else { return nil }
+                guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return nil }
+                switch item {
+                case .poster(let posterItem):
+                    return (indexPath, posterItem.id)
+                }
+            }
+            .bind(with: self) { owner, payload in
+                let (indexPath, movieID) = payload
+                owner.collectionView.deselectItem(at: indexPath, animated: true)
+                owner.delegate?.homeViewControllerDidSelectedMovie(movieID)
+            }
+            .disposed(by: disposeBag)
     }
+}
+
+// MARK: - 화면 이동
+@MainActor
+public protocol HomeViewControllerDelegate: AnyObject {
+    func homeViewControllerDidSelectedMovie(_ movieID: Int)
 }
