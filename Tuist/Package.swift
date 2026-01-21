@@ -7,8 +7,13 @@ import PackageDescription
     let packageSettings = PackageSettings(
         // Customize the product types for specific package product
         // Default is .staticFramework
-        // productTypes: ["Alamofire": .framework,] 
-        productTypes: [:]
+        // RxSwift 관련 라이브러리는 dynamic framework로 설정 필요 (DelegateProxy 런타임 문제 해결)
+        productTypes: [
+            "RxSwift": .framework,
+            "RxCocoa": .framework,
+            "RxRelay": .framework,
+            "RxCocoaRuntime": .framework
+        ]
     )
 #endif
 
