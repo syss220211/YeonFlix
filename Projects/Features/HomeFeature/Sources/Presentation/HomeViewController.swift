@@ -16,142 +16,233 @@ import RxSwift
 import RxRelay
 import RxCocoa
 
-public final class HomeViewController: UIViewController {
-
-    private let viewModel: HomeViewModel
-    public let disposeBag = DisposeBag()
-
-    private let saveTokenButton = DSButton(style: .primary, title: "Save API Token to Keychain")
-    private let testButton = DSButton(style: .primary, title: "Fetch Now Playing Movies")
-    private let navigationButton = DSButton(style: .primary, title: "Movie! Detail")
-
-    private let customButtonPrimaryApp = DSLargeButton(buttonStyle: .primaryOnboarding, buttonConfig: .large)
-    private let customButtonPrimaryOnboarding = DSLargeButton(buttonStyle: .primaryApp, buttonConfig: .medium)
-    private let customButtonSecondaryApp = DSLargeButton(buttonStyle: .secondaryApp, buttonConfig: .small)
-
-    @objc
-    func secondaryTapped() {
-        print("isItPossibileTapp?")
+final class HomeViewController: UIViewController {
+    
+    enum Section: Int, CaseIterable, Hashable {
+        case nowPlaying
+        case popular
+        case topRated
+        case upcoming
+        
+        var title: String {
+            switch self {
+            case .nowPlaying: return "상영 중"
+            case .popular: return "인기 영화"
+            case .topRated: return "평점 높은 영화"
+            case .upcoming: return "개봉 예정"
+            }
+        }
     }
     
-    private let resultLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .label
-        return label
+    enum Item: Hashable {
+        case poster(HomePosterItem)
+    }
+    
+    private lazy var collectionView: UICollectionView = {
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
+        cv.backgroundColor = .black
+        cv.alwaysBounceVertical = true
+        return cv
     }()
     
-    public init(viewModel: HomeViewModel) {
+    private let refreshControl = UIRefreshControl()
+    private typealias DataSource = UICollectionViewDiffableDataSource<Section, Item>
+    private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, Item>
+    private var dataSource: DataSource!
+    
+    private let viewModel: HomeViewModel
+    private let disposeBag = DisposeBag()
+    weak var delegate: HomeViewControllerDelegate?
+    
+    init(viewModel: HomeViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    public override func viewDidLoad() {
+    
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    
+    override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .black
         setupUI()
-        setupLayout()
-        bindViewModel()
+        configureDataSource()
+        bind()
+        applyInitialSnapshot()
     }
-
+    
     private func setupUI() {
-        view.backgroundColor = DesignSystemColor.background
-        view.addSubview(saveTokenButton)
-        view.addSubview(testButton)
-        view.addSubview(navigationButton)
-        view.addSubview(customButtonPrimaryApp)
-        view.addSubview(customButtonPrimaryOnboarding)
-        view.addSubview(customButtonSecondaryApp)
-        view.addSubview(resultLabel)
-
-        customButtonPrimaryApp.updateTitle("Primary App Style")
-        customButtonPrimaryOnboarding.updateTitle("Primary Onboarding Style")
-        customButtonSecondaryApp.updateTitle("Secondary App Style")
-        customButtonSecondaryApp.updateImage(DSImage.search.image)
-        customButtonSecondaryApp.addTarget(self, action: #selector(secondaryTapped), for: .touchUpInside)
+        view.addSubview(collectionView)
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+            collectionView.topAnchor.constraint(equalTo: view.topAnchor),
+            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        collectionView.refreshControl = refreshControl
     }
-
-    private func setupLayout() {
-        saveTokenButton.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview().offset(-150)
-            make.width.equalTo(250)
-            make.height.equalTo(52)
-        }
-
-        testButton.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(saveTokenButton.snp.bottom).offset(20)
-            make.width.equalTo(250)
-            make.height.equalTo(52)
-        }
-
-        navigationButton.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(testButton.snp.bottom).offset(20)
-            make.width.equalTo(250)
-            make.height.equalTo(52)
-        }
-
-        customButtonPrimaryApp.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(navigationButton.snp.bottom).offset(20)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
-        }
-
-        customButtonPrimaryOnboarding.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(customButtonPrimaryApp.snp.bottom).offset(16)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
-        }
-
-        customButtonSecondaryApp.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(customButtonPrimaryOnboarding.snp.bottom).offset(16)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
-        }
-
-        resultLabel.snp.makeConstraints { make in
-            make.top.equalTo(customButtonSecondaryApp.snp.bottom).offset(40)
-            make.leading.equalToSuperview().offset(20)
-            make.trailing.equalToSuperview().offset(-20)
+    
+    
+    private func makeLayout() -> UICollectionViewCompositionalLayout {
+        UICollectionViewCompositionalLayout { sectionIndex, _ in
+            guard let section = Section(rawValue: sectionIndex) else { return nil }
+            
+            // item: 셀 1개의 크기 정의
+            let itemSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .fractionalHeight(1.0)
+            )
+            let item = NSCollectionLayoutItem(layoutSize: itemSize)
+            item.contentInsets = .init(top: 0, leading: 6, bottom: 0, trailing: 6)
+            
+            // Group 종류에 따른 height, width 설정
+            let groupHeight: CGFloat = (section == .nowPlaying) ? 240 : 210
+            let groupWidth: CGFloat = (section == .nowPlaying) ? 0.42 : 0.34
+            
+            let groupSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(groupWidth),
+                heightDimension: .absolute(groupHeight)
+            )
+            // 포스터 카드 한장의 틀(크기와 형태)을 정의
+            let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
+            
+            let sectionLayout = NSCollectionLayoutSection(group: group)
+            sectionLayout.orthogonalScrollingBehavior = .continuousGroupLeadingBoundary
+            sectionLayout.interGroupSpacing = 8
+            sectionLayout.contentInsets = .init(top: 8, leading: 16, bottom: 24, trailing: 16)
+            
+            let headerSize = NSCollectionLayoutSize(
+                widthDimension: .fractionalWidth(1.0),
+                heightDimension: .estimated(44)
+            )
+            let header = NSCollectionLayoutBoundarySupplementaryItem(
+                layoutSize: headerSize,
+                elementKind: UICollectionView.elementKindSectionHeader,
+                alignment: .top
+            )
+            sectionLayout.boundarySupplementaryItems = [header] // 보조뷰로 header 사용
+            
+            return sectionLayout
         }
     }
-
-    private func bindViewModel() {
+    
+    private func configureDataSource() {
+        // PostCell 타입으로 셀을 만들고, 그 안에는 Item 타입의 데이터가 들어감
+        let cellRegistration = UICollectionView.CellRegistration<PosterCell, Item> { cell, _, item in
+            guard case let .poster(posterItem) = item else { return }
+            let url = posterItem.posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500\($0)") }
+            // Cell 구성
+            cell.configure(posterURL: url)
+        }
+        
+        // Diffable DataSource 생성
+        dataSource = DataSource(collectionView: collectionView) { collectionView, indexPath, item in
+            collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: item)
+        }
+        
+        let headerRegistration = UICollectionView.SupplementaryRegistration<HomeSectionHeaderView>(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { [weak self] header, _, indexPath in
+            guard let self,
+                  let section = Section(rawValue: indexPath.section) else { return }
+            header.configure(title: section.title)
+        }
+        
+        dataSource.supplementaryViewProvider = { collectionView, kind, indexPath in
+            collectionView.dequeueConfiguredReusableSupplementary(using: headerRegistration, for: indexPath)
+        }
+    }
+    
+    private func applyInitialSnapshot() {
+        var snapshot = Snapshot()
+        snapshot.appendSections(Section.allCases)
+        dataSource.apply(snapshot, animatingDifferences: false)
+    }
+    
+    private func applySnapshot(
+        nowPlaying: [HomePosterItem],
+        popular: [HomePosterItem],
+        topRated: [HomePosterItem],
+        upcoming: [HomePosterItem]
+    ) {
+        var snapshot = Snapshot()
+        snapshot.appendSections(Section.allCases)
+        
+        snapshot.appendItems(nowPlaying.map { .poster($0) }, toSection: .nowPlaying)
+        snapshot.appendItems(popular.map { .poster($0) }, toSection: .popular)
+        snapshot.appendItems(topRated.map { .poster($0) }, toSection: .topRated)
+        snapshot.appendItems(upcoming.map { .poster($0) }, toSection: .upcoming)
+        
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+    
+    private func bind() {
         let input = HomeViewModel.Input(
-            saveTokenTapped: saveTokenButton.rx.tap.asObservable(),
-            fetchMoviesTapped: testButton.rx.tap.asObservable(),
-            movieDetailTapped: navigationButton.rx.tap.map { 12345 }
+            viewDidLoad: Observable.just(()),
+            refresh: refreshControl.rx.controlEvent(.valueChanged).asObservable()
         )
-
+        
         let output = viewModel.transform(input: input)
-
-        output.resultText
-            .drive(resultLabel.rx.text)
+        
+        // Dirver들에서 방출하는 새로운 값들을 읽음
+        Observable
+            .combineLatest(
+                output.nowPlaying.asObservable(),
+                output.popular.asObservable(),
+                output.topRated.asObservable(),
+                output.upcoming.asObservable()
+            )
+            .observe(on: MainScheduler.instance) // 하위 작업들을 실행할 스레드 지정
+            .bind(with: self) { owner, value in
+                // Subscribe의 UI 바인딩 버전, 스트림에서 값이 오면 값을 받아서 UI 갱신에 연결
+                let (now, pop, top, upc) = value
+                owner.applySnapshot(nowPlaying: now, popular: pop, topRated: top, upcoming: upc)
+                // 4개중에 하나라도 값이 바뀌는 순간 applySnapShot을 호출함
+            }
             .disposed(by: disposeBag)
-
+        
+        // 로딩 상태가 바뀔때마다 UI와 연결
         output.isLoading
-            .drive(onNext: { [weak self] isLoading in
-                self?.testButton.isEnabled = !isLoading
-                self?.saveTokenButton.isEnabled = !isLoading
-            })
+        // viewModel의 driver가(isLoading: Driver<Bool>) 방출하는 상태값을 VC(UI에)에서 안전하게 바인딩
+            .drive(with: self) { owner, isLoading in
+                if !isLoading, owner.refreshControl.isRefreshing {
+                    // 로딩이 끝났을 때 사용자가 당김 새로고침중이었다면 새로고침 UI를 종료함
+                    owner.refreshControl.endRefreshing()
+                }
+            }
             .disposed(by: disposeBag)
-
-        output.isMoviesFetched
-            .drive(onNext: { [weak self] isFetched in
-                self?.customButtonPrimaryApp.isEnabled = isFetched
-                self?.customButtonPrimaryOnboarding.isEnabled = isFetched
-                self?.customButtonSecondaryApp.isEnabled = isFetched
-            })
+        
+        output.errorMessage
+        // Signal: 한번 발생하고 끝나는 이벤트를 전달하기 위한 RxCocoa 타입, Signal 전용 bind가 emit
+            .emit(with: self) { owner, message in
+                let alert = UIAlertController(title: "에러", message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "확인", style: .default))
+                owner.present(alert, animated: true)
+            }
+            .disposed(by: disposeBag)
+        
+        collectionView.rx.itemSelected
+            .compactMap { [weak self] indexPath -> (IndexPath, Int)? in
+                guard let self else { return nil }
+                guard let item = self.dataSource.itemIdentifier(for: indexPath) else { return nil }
+                switch item {
+                case .poster(let posterItem):
+                    return (indexPath, posterItem.id)
+                }
+            }
+            .bind(with: self) { owner, payload in
+                let (indexPath, movieID) = payload
+                owner.collectionView.deselectItem(at: indexPath, animated: true)
+                owner.delegate?.homeViewControllerDidSelectedMovie(movieID)
+            }
             .disposed(by: disposeBag)
     }
+}
+
+// MARK: - 화면 이동
+@MainActor
+public protocol HomeViewControllerDelegate: AnyObject {
+    func homeViewControllerDidSelectedMovie(_ movieID: Int)
 }

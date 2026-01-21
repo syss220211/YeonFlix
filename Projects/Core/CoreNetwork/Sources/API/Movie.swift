@@ -10,13 +10,13 @@ import Foundation
 
 public enum Movie: Endpoint {
     /// 인기 콘텐츠
-    case popularContents
+    case popularContents(page: Int)
     /// 현재 상영 중
     case nowPlaying(page: Int)
     /// 평점 높은 영화
-    case topRatedMovies
+    case topRatedMovies(page: Int)
     /// 개봉 예정 영화
-    case upcomingMovies
+    case upcomingMovies(page: Int)
     
     /// API Key 필참 여부
     public var requiresKey: Bool { true }
@@ -30,9 +30,9 @@ public extension Movie {
         case .nowPlaying:
             "/movie/now_playing"
         case .topRatedMovies:
-            "dd"
+            "/movie/top_rated"
         case .upcomingMovies:
-            "dd"
+            "/movie/upcoming"
         }
     }
     

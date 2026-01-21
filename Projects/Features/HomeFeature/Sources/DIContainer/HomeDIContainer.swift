@@ -8,6 +8,7 @@
 
 import CoreNetwork
 
+@MainActor
 public final class HomeFeatureDIContainer {
     
     private let movieNetworkDataSource: MovieNetworkDataSource

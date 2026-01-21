@@ -10,7 +10,10 @@ import CoreModels
 import CoreNetwork
 
 public protocol HomeUseCase {
-    func fetchNowPlayingMovies(page: Int) async throws -> NowPlayingEntity
+    func fetchNowPlayingMovies(page: Int) async throws -> PaginatedEntity<NowPlayingMoviesEntity>
+    func fetchPopularMovies(page: Int) async throws -> PaginatedEntity<PopularMoviesEntity>
+    func fetchTopRateMovies(page: Int) async throws -> PaginatedEntity<TopRateMovieEntity>
+    func fetchUpcomingMovies(page: Int) async throws -> PaginatedEntity<UpcomingMoviesEntity>
 }
 
 public final class DefaultHomeUseCase: HomeUseCase {
@@ -20,7 +23,19 @@ public final class DefaultHomeUseCase: HomeUseCase {
         self.repository = repository
     }
     
-    public func fetchNowPlayingMovies(page: Int) async throws -> NowPlayingEntity {
+    public func fetchNowPlayingMovies(page: Int) async throws -> PaginatedEntity<NowPlayingMoviesEntity> {
         return try await repository.fetchPlayingMovies(page: page)
+    }
+    
+    public func fetchPopularMovies(page: Int) async throws -> PaginatedEntity<PopularMoviesEntity> {
+        return try await repository.fetchPopularMovies(page: page)
+    }
+    
+    public func fetchTopRateMovies(page: Int) async throws -> PaginatedEntity<TopRateMovieEntity> {
+        return try await repository.fetchTopRateMovies(page: page)
+    }
+    
+    public func fetchUpcomingMovies(page: Int) async throws -> PaginatedEntity<UpcomingMoviesEntity> {
+        return try await repository.fetchUpcomingMovies(page: page)
     }
 }
