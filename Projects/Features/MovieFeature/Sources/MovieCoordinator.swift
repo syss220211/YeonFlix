@@ -18,7 +18,15 @@ public final class MovieCoordinator {
     
     public func movieHome(_ movieID: Int) {
         let vc = MovieDetailViewController(movieID: movieID)
-        vc.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(vc, animated: true)
+
+        // 화면 Push
+        //        vc.hidesBottomBarWhenPushed = true
+        //        navigationController?.pushViewController(vc, animated: true)
+        
+        // 화면 바텀 시트
+        vc.modalPresentationStyle = .fullScreen
+        
+        let nav = UINavigationController(rootViewController: vc)
+        navigationController?.present(nav, animated: true)
     }
 }
