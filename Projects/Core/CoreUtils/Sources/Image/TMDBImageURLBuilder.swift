@@ -30,10 +30,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// Poster 이미지 URL을 생성합니다.
-    /// - Parameters:
-    ///   - path: 이미지 파일 경로 (예: "/abc123.jpg")
-    ///   - size: 이미지 크기 (기본값: w500)
-    /// - Returns: 완성된 이미지 URL
     public func posterURL(path: String?, size: PosterSize = .w500) -> URL? {
         guard let path = path else { return nil }
 
@@ -50,10 +46,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// Backdrop 이미지 URL을 생성합니다.
-    /// - Parameters:
-    ///   - path: 이미지 파일 경로
-    ///   - size: 이미지 크기 (기본값: w1280)
-    /// - Returns: 완성된 이미지 URL
     public func backdropURL(path: String?, size: BackdropSize = .w1280) -> URL? {
         guard let path = path else { return nil }
 
@@ -69,10 +61,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// Logo 이미지 URL을 생성합니다.
-    /// - Parameters:
-    ///   - path: 이미지 파일 경로
-    ///   - size: 이미지 크기 (기본값: w185)
-    /// - Returns: 완성된 이미지 URL
     public func logoURL(path: String?, size: LogoSize = .w185) -> URL? {
         guard let path = path else { return nil }
 
@@ -88,10 +76,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// Profile 이미지 URL을 생성합니다.
-    /// - Parameters:
-    ///   - path: 이미지 파일 경로
-    ///   - size: 이미지 크기 (기본값: w185)
-    /// - Returns: 완성된 이미지 URL
     public func profileURL(path: String?, size: ProfileSize = .w185) -> URL? {
         guard let path = path else { return nil }
 
@@ -109,11 +93,6 @@ public final class TMDBImageURLBuilder {
     // MARK: - Private Helper Methods
 
     /// 요청한 크기가 API에서 지원하는지 검증하고, 지원하지 않으면 가장 가까운 크기를 반환합니다.
-    /// - Parameters:
-    ///   - requested: 요청한 크기 (예: "w500")
-    ///   - availableSizes: API에서 지원하는 크기 목록
-    ///   - sizeType: 이미지 타입 (로깅용)
-    /// - Returns: 최종 사용할 크기
     private func validateAndFindBestSize(
         requested: String,
         availableSizes: [String],
@@ -139,10 +118,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// 요청한 크기와 가장 가까운 크기를 찾습니다.
-    /// - Parameters:
-    ///   - requested: 요청한 크기 (예: "w500")
-    ///   - available: 사용 가능한 크기 목록
-    /// - Returns: 가장 가까운 크기
     private func findClosestSize(requested: String, available: [String]) -> String {
         // "original"이 요청되었거나 사용 가능하면 그것 사용
         if requested == "original" {
@@ -168,8 +143,6 @@ public final class TMDBImageURLBuilder {
     }
 
     /// 크기 문자열에서 너비 숫자를 추출합니다.
-    /// - Parameter size: 크기 문자열 (예: "w500")
-    /// - Returns: 추출된 너비 (예: 500), 실패 시 nil
     private func extractWidth(from size: String) -> Int? {
         // "w500" → 500
         // "h632" → 632
