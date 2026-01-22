@@ -21,4 +21,7 @@ public protocol MovieNetworkDataSource {
     
     /// UpComing, 곧 개봉하는 영화들의 항목을 가져옵니다.
     func fetchUpcomingMovies(page: Int) async throws -> PaginatedResponse<UpcomingMoviesDTO>
+    
+    /// 영화 상세 정보를 가져옵니다.  (영화 상세/동영상/출연진)
+    func fetchMovieDetails(movieId: Int) async throws -> MovieDetailBundleDTO
 }

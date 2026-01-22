@@ -15,7 +15,7 @@ import HomeFeature
 final public class AppDIContainer {
     
     // MARK: - Configuration
-    private lazy var apiConfig: APIConfig = {
+    lazy var apiConfig: APIConfig = {
         guard let baseURL = URL(string: "https://api.themoviedb.org/3")
         else {
             fatalError("Invalid TMDB base URL")

@@ -19,6 +19,12 @@ public enum Movie: Endpoint {
     case upcomingMovies(page: Int)
     /// 영화 상세 정보
     case movieDetail(movieID: Int)
+    /// 영화의 비디오 정보
+    case movieVideos(movieID: Int)
+    /// 영화의 Credit 정보 (감독, 출연진)
+    case movieCredits(movieID: Int)
+    /// 영화 상세 화면 종합 (상세,출연진, 비디오)
+    case movieDetailBundle(movieID: Int)
     
     /// API Key 필참 여부
     public var requiresKey: Bool { true }
@@ -37,6 +43,12 @@ public extension Movie {
             "/movie/upcoming"
         case .movieDetail(let movieId):
             "/movie/\(movieId)"
+        case .movieVideos(let movieID):
+            "/movie/\(movieID)/videos"
+        case .movieCredits(let movieID):
+            "/movie/\(movieID)/credits"
+        case .movieDetailBundle(let movieID):
+            "/movie/\(movieID)"
         }
     }
     
@@ -53,9 +65,14 @@ public extension Movie {
                 URLQueryItem(name: "language", value: "ko-KR"),
                 URLQueryItem(name: "page", value: "\(page)"),
             ]
-        case .movieDetail:
+        case .movieDetail, .movieCredits, .movieVideos:
             return [
                 URLQueryItem(name: "language", value: "ko-KR")
+            ]
+        case .movieDetailBundle:
+            return [
+                .init(name: "language", value: "ko-KR"),
+                .init(name: "append_to_response", value: "videos,credits")
             ]
         }
     }

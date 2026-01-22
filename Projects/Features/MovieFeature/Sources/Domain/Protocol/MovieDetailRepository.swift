@@ -1,0 +1,14 @@
+//
+//  MovieDetailRepository.swift
+//  MovieFeature
+//
+//  Created by 박서연 on 1/23/26.
+//  Copyright © 2026 linda. All rights reserved.
+//
+
+import CoreModels
+import CoreNetwork
+
+public protocol MovieDetailRepository {
+    func fetchMovieDetails(movieID: Int) async throws -> MovieDetailBundleEntity
+}

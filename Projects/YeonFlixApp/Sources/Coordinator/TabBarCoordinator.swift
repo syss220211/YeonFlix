@@ -64,7 +64,14 @@ final class TabBarCoordinator {
 
 extension TabBarCoordinator: HomeViewControllerDelegate {
     func homeViewControllerDidSelectedMovie(_ movieID: Int) {
-        let movieCoordinator = MovieCoordinator(navigationController: homeCoordinator?.navigationController)
+        let movieDIContainer = MovieDIContainer(
+            networkService: diContainer.networkService,
+            apiConfig: diContainer.apiConfig
+        )
+        let movieCoordinator = MovieCoordinator(
+            navigationController: homeCoordinator?.navigationController,
+            diContainer: movieDIContainer
+        )
         movieCoordinator.movieHome(movieID)
     }
 }
