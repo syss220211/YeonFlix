@@ -61,4 +61,11 @@ final public class AppDIContainer {
             apiConfig: apiConfig
         )
     }()
+
+    public lazy var configurationDataSource: ConfigurationNetworkDataSource = {
+        DefaultConfigurationDataSource(
+            networkService: networkService,
+            apiConfig: apiConfig
+        )
+    }()
 }

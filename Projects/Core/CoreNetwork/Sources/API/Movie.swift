@@ -17,6 +17,8 @@ public enum Movie: Endpoint {
     case topRatedMovies(page: Int)
     /// 개봉 예정 영화
     case upcomingMovies(page: Int)
+    /// 영화 상세 정보
+    case movieDetail(movieID: Int)
     
     /// API Key 필참 여부
     public var requiresKey: Bool { true }
@@ -33,6 +35,8 @@ public extension Movie {
             "/movie/top_rated"
         case .upcomingMovies:
             "/movie/upcoming"
+        case .movieDetail(let movieId):
+            "/movie/\(movieId)"
         }
     }
     
@@ -44,13 +48,15 @@ public extension Movie {
     
     var queryItems: [URLQueryItem]? {
         switch self {
-        case .nowPlaying(let page):
+        case .nowPlaying(let page), .popularContents(let page), .topRatedMovies(let page), .upcomingMovies(let page):
             return [
                 URLQueryItem(name: "language", value: "ko-KR"),
                 URLQueryItem(name: "page", value: "\(page)"),
             ]
-        default:
-            return nil
+        case .movieDetail:
+            return [
+                URLQueryItem(name: "language", value: "ko-KR")
+            ]
         }
     }
     

@@ -12,6 +12,6 @@ let coreUtilsProject = Project.makeCoreModule(
     name: "CoreUtils",
     isResource: false,
     dependencies: [
-//        .project(target: "DesignSystem", path: "../../DesignSystem")
+        .project(target: "CoreModels", path: "../CoreModels")
     ]
 )

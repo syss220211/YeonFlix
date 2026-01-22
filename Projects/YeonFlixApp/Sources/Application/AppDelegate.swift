@@ -10,6 +10,7 @@ import UIKit
 
 import HomeFeature
 import DesignSystem
+import CoreUtils
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -19,6 +20,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         DesignSystemFontFamily.registerAllCustomFonts()
+
+        Task {
+            await loadTMDBConfiguration()
+        }
+
         return true
     }
 
@@ -28,8 +34,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         options: UIScene.ConnectionOptions
     ) -> UISceneConfiguration {
         let configuration = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
-        
+
         configuration.delegateClass = SceneDelegate.self
         return configuration
+    }
+
+    // MARK: - Private Methods
+    private func loadTMDBConfiguration() async {
+        do {
+            let diContainer = AppDIContainer()
+            let dto = try await diContainer.configurationDataSource.fetchConfiguration()
+            let entity = dto.toDomain()
+            TMDBImageURLBuilder.shared.configure(with: entity)
+            print("✅ TMDB Configuration 로드 완료")
+        } catch {
+            print("⚠️ TMDB Configuration 로드 실패, fallback URL 사용: \(error)")
+        }
     }
 }

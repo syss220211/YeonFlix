@@ -10,6 +10,7 @@ import UIKit
 import CoreCommonUI
 import CoreNetwork
 import CoreSecurity
+import CoreUtils
 import DesignSystem
 
 import RxSwift
@@ -132,7 +133,8 @@ final class HomeViewController: UIViewController {
         // PostCell 타입으로 셀을 만들고, 그 안에는 Item 타입의 데이터가 들어감
         let cellRegistration = UICollectionView.CellRegistration<PosterCell, Item> { cell, _, item in
             guard case let .poster(posterItem) = item else { return }
-            let url = posterItem.posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500\($0)") }
+            // TMDBImageURLBuilder를 사용하여 동적으로 이미지 URL 생성
+            let url = TMDBImageURLBuilder.shared.posterURL(path: posterItem.posterPath, size: .w500)
             // Cell 구성
             cell.configure(posterURL: url)
         }
@@ -145,8 +147,7 @@ final class HomeViewController: UIViewController {
         let headerRegistration = UICollectionView.SupplementaryRegistration<HomeSectionHeaderView>(
             elementKind: UICollectionView.elementKindSectionHeader
         ) { [weak self] header, _, indexPath in
-            guard let self,
-                  let section = Section(rawValue: indexPath.section) else { return }
+            guard let self, let section = Section(rawValue: indexPath.section) else { return }
             header.configure(title: section.title)
         }
         
