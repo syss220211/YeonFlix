@@ -24,4 +24,7 @@ public protocol MovieNetworkDataSource {
     
     /// 영화 상세 정보를 가져옵니다.  (영화 상세/동영상/출연진)
     func fetchMovieDetails(movieId: Int) async throws -> MovieDetailBundleDTO
+    
+    /// 유사한 영화 정보를 가져옵니다.
+    func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedResponse<SimilarMovieDTO>
 }

@@ -11,4 +11,5 @@ import CoreNetwork
 
 public protocol MovieDetailRepository {
     func fetchMovieDetails(movieID: Int) async throws -> MovieDetailBundleEntity
+    func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedEntity<SimilarMoviesEntity>
 }

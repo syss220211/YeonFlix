@@ -50,20 +50,20 @@ public final class DefaultNetworkService: NetworkService {
             throw NetworkError.invalidResponse
         }
 
-        #if DEBUG
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("📡 [NetworkService] Response JSON from \(endpoint.path):")
-            print(jsonString)
-        } else {
-            print("⚠️ [NetworkService] Could not convert response data to string")
-        }
-        #endif
+//        #if DEBUG
+//        if let jsonString = String(data: data, encoding: .utf8) {
+//            print("📡 [NetworkService] Response JSON from \(endpoint.path):")
+//            print(jsonString)
+//        } else {
+//            print("⚠️ [NetworkService] Could not convert response data to string")
+//        }
+//        #endif
 
         do {
             let decoded = try decoder.decode(T.self, from: data)
 
             #if DEBUG
-            print("✅ [NetworkService] Decoding Success: \(T.self)")
+            dump("✅ [NetworkService] Decoding Success: \(T.self)")
             #endif
 
             return decoded

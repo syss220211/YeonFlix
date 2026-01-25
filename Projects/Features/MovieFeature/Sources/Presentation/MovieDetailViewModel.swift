@@ -21,16 +21,18 @@ public final class MovieDetailViewModel {
 
     struct Output {
         let movieDetail: Driver<MovieDetailBundleEntity>
+        let similarMovies: Driver<[SimilarMoviesEntity]>
         let isLoading: Driver<Bool>
         let errorMessage: Signal<String>
         let openYouTubeURL: Signal<String>
     }
-
+    
     private let useCase: MovieDetailUseCase
     private let movieID: Int
     private let disposeBag = DisposeBag()
 
     private let movieDetailRelay = BehaviorRelay<MovieDetailBundleEntity?>(value: nil)
+    private let similarMoviesRelay = BehaviorRelay<[SimilarMoviesEntity]>(value: [])
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorMessageRelay = PublishRelay<String>()
     private let openYouTubeRelay = PublishRelay<String>()
@@ -44,6 +46,7 @@ public final class MovieDetailViewModel {
         input.viewDidLoad
             .subscribe(with: self) { owner, _ in
                 owner.fetchMovieDetail()
+                owner.fetchSimilarMovies(page: 1)
             }
             .disposed(by: disposeBag)
 
@@ -63,6 +66,7 @@ public final class MovieDetailViewModel {
             movieDetail: movieDetailRelay
                 .compactMap { $0 }
                 .asDriver(onErrorDriveWith: .empty()),
+            similarMovies: similarMoviesRelay.asDriver(),
             isLoading: isLoadingRelay.asDriver(),
             errorMessage: errorMessageRelay.asSignal(),
             openYouTubeURL: openYouTubeRelay.asSignal()
@@ -81,6 +85,17 @@ public final class MovieDetailViewModel {
                 errorMessageRelay.accept(error.localizedDescription)
             }
             isLoadingRelay.accept(false)
+        }
+    }
+    
+    private func fetchSimilarMovies(page: Int) {
+        Task { [movieID, useCase] in
+            do {
+                let response = try await useCase.fetchSimilarMovies(movieId: movieID, page: page)
+                similarMoviesRelay.accept(response.results)
+            } catch {
+                errorMessageRelay.accept(error.localizedDescription)
+            }
         }
     }
 }

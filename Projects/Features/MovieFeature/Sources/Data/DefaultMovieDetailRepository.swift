@@ -20,4 +20,8 @@ public final class DefaultMovieDetailRepository: MovieDetailRepository {
     public func fetchMovieDetails(movieID: Int) async throws -> CoreModels.MovieDetailBundleEntity {
         return try await remoteNetwork.fetchMovieDetails(movieId: movieID).toDomain()
     }
+    
+    public func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedEntity<SimilarMoviesEntity> {
+        return try await remoteNetwork.fetchSimilarMovies(movieId: movieId, page: page).toDomain()
+    }
 }

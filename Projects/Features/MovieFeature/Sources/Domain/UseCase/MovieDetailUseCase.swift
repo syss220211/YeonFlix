@@ -11,6 +11,7 @@ import CoreNetwork
 
 public protocol MovieDetailUseCase {
     func fetchMovieDetail(movieId: Int) async throws -> MovieDetailBundleEntity
+    func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedEntity<SimilarMoviesEntity>
 }
 
 public final class DefaultMovieDetailUseCase: MovieDetailUseCase {
@@ -22,5 +23,9 @@ public final class DefaultMovieDetailUseCase: MovieDetailUseCase {
     
     public func fetchMovieDetail(movieId: Int) async throws -> MovieDetailBundleEntity {
         return try await repository.fetchMovieDetails(movieID: movieId)
+    }
+    
+    public func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedEntity<SimilarMoviesEntity> {
+        return try await repository.fetchSimilarMovies(movieId: movieId, page: page)
     }
 }

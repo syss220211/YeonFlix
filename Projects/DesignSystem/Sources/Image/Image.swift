@@ -17,6 +17,8 @@ public enum DSImage {
     case info
     case search
     case fillClose
+    case plus
+    case share
 
     public var image: UIImage {
         UIImage(
@@ -28,14 +30,16 @@ public enum DSImage {
 
     private var name: String {
         switch self {
-        case .close:       return "ic_close"
-        case .emptyGood:   return "ic_empty_good"
-        case .error:       return "ic_error"
-        case .fillPause:   return "ic_fill_pause"
-        case .fillPlay:    return "ic_fill_play"
-        case .info:        return "ic_info"
-        case .search:      return "ic_search"
+        case .close:        return "ic_close"
+        case .emptyGood:    return "ic_empty_good"
+        case .error:        return "ic_error"
+        case .fillPause:    return "ic_fill_pause"
+        case .fillPlay:     return "ic_fill_play"
+        case .info:         return "ic_info"
+        case .search:       return "ic_search"
         case .fillClose:    return "ic_fill_grey_close"
+        case .plus:         return "ic_plus"
+        case .share:        return "ic_share"
         }
     }
 }
