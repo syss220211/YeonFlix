@@ -16,12 +16,14 @@ import RxCocoa
 public final class MovieDetailViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
+        let youtubeButtonTapped: Observable<Void>
     }
 
     struct Output {
         let movieDetail: Driver<MovieDetailBundleEntity>
         let isLoading: Driver<Bool>
         let errorMessage: Signal<String>
+        let openYouTubeURL: Signal<String>
     }
 
     private let useCase: MovieDetailUseCase
@@ -31,7 +33,8 @@ public final class MovieDetailViewModel {
     private let movieDetailRelay = BehaviorRelay<MovieDetailBundleEntity?>(value: nil)
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorMessageRelay = PublishRelay<String>()
-
+    private let openYouTubeRelay = PublishRelay<String>()
+    
     public init(movieID: Int, useCase: MovieDetailUseCase) {
         self.movieID = movieID
         self.useCase = useCase
@@ -44,12 +47,25 @@ public final class MovieDetailViewModel {
             }
             .disposed(by: disposeBag)
 
+        input.youtubeButtonTapped
+            .withLatestFrom(movieDetailRelay.compactMap { $0 })
+            .subscribe(with: self) { owner, movieDetail in
+                let trailers = movieDetail.videos.filter { $0.type == "Trailer" }
+                if let trailer = trailers.first, let key = trailer.key {
+                    owner.openYouTubeRelay.accept(key)
+                } else {
+                    owner.errorMessageRelay.accept("트레일러를 찾을 수 없습니다")
+                }
+            }
+            .disposed(by: disposeBag)
+        
         return Output(
             movieDetail: movieDetailRelay
                 .compactMap { $0 }
                 .asDriver(onErrorDriveWith: .empty()),
             isLoading: isLoadingRelay.asDriver(),
-            errorMessage: errorMessageRelay.asSignal()
+            errorMessage: errorMessageRelay.asSignal(),
+            openYouTubeURL: openYouTubeRelay.asSignal()
         )
     }
 
