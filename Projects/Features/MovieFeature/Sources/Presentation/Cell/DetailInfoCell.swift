@@ -8,6 +8,11 @@
 
 import UIKit
 
+import SnapKit
+
+import CoreCommonUI
+import DesignSystem
+
 final class DetailInfoCell: UICollectionViewCell {
     
     static let identifier = "DetailInfoCell"

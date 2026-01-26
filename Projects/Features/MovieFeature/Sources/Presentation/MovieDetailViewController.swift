@@ -149,7 +149,7 @@ public final class MovieDetailViewController: UIViewController {
         
         output.similarMovies
             .drive(with: self) { owner, movies in
-                owner.similarMovies = movies
+                owner.similarMovies = movies.filter { $0.posterPath?.isEmpty == false }
                 owner.collectionView.reloadSections(IndexSet(integer: Section.similar.rawValue))
             }
             .disposed(by: disposeBag)

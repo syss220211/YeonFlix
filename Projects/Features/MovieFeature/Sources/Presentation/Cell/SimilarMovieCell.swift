@@ -36,6 +36,8 @@ final class SimilarMovieCell: UICollectionViewCell {
     }
     
     func configure(with posterURL: URL?) {
+        posterImageView.image = nil
+        posterImageView.backgroundColor = .darkGray
         guard let url = posterURL else { return }
         
         Task {
@@ -52,5 +54,11 @@ final class SimilarMovieCell: UICollectionViewCell {
                 }
             }
         }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        posterImageView.image = nil
+        posterImageView.backgroundColor = .darkGray
     }
 }
