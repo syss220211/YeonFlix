@@ -185,11 +185,12 @@ public final class MovieDetailViewController: UIViewController {
 
 // MARK: - UICollectionViewDataSource
 extension MovieDetailViewController: UICollectionViewDataSource {
-    
+    // Collection뷰에 들어가는 Section의 개수 지정
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
         Section.allCases.count
     }
     
+    // 각 Section에 들어갈 item(cell)의 개수를 지정
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         guard let section = Section(rawValue: section) else { return 0 }
         switch section {
@@ -199,9 +200,9 @@ extension MovieDetailViewController: UICollectionViewDataSource {
             return similarMovies.count
         }
     }
-    
-    public func collectionView(_ collectionView: UICollectionView,
-                               cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+     
+    // (Section, item) 위치에 넣을 셀 지정
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let section = Section(rawValue: indexPath.section) else { return UICollectionViewCell() }
         
         switch section {
@@ -218,7 +219,7 @@ extension MovieDetailViewController: UICollectionViewDataSource {
                 let hour = (detail.runtime ?? 0) / 60
                 let minutes = (detail.runtime ?? 0) % 60
                 
-                let title = detail.title ?? "-"
+                let title = detail.title
                 let info = "\(detail.releaseDate ?? "") 개봉 \(hour)시간 \(minutes)분"
                 let rate = detail.voteAverage.map { "평점 \($0)" } ?? "평점 -"
                 let overview = detail.overview ?? ""
@@ -257,9 +258,8 @@ extension MovieDetailViewController: UICollectionViewDataSource {
         }
     }
     
-    public func collectionView(_ collectionView: UICollectionView,
-                               viewForSupplementaryElementOfKind kind: String,
-                               at indexPath: IndexPath) -> UICollectionReusableView {
+    // 섹션의 헤더/푸터 유무 설정
+    public func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         guard kind == UICollectionView.elementKindSectionHeader else {
             return UICollectionReusableView()
         }
@@ -277,10 +277,8 @@ extension MovieDetailViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
-    
-    public func collectionView(_ collectionView: UICollectionView,
-                               layout collectionViewLayout: UICollectionViewLayout,
-                               referenceSizeForHeaderInSection section: Int) -> CGSize {
+    // 섹션의 헤더 크기 지정
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         guard let sec = Section(rawValue: section) else { return .zero }
         switch sec {
         case .detail:
@@ -290,11 +288,12 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
         }
     }
     
-    public func collectionView(_ collectionView: UICollectionView,
-                               layout collectionViewLayout: UICollectionViewLayout,
-                               sizeForItemAt indexPath: IndexPath) -> CGSize {
+    
+    // 셀 하나의 크기 지정
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let section = Section(rawValue: indexPath.section) else { return .zero }
         
+        // (셀 높이를 계산하기 위해서 임시 셀을 만드는 과정)
         switch section {
         case .detail:
             let width = collectionView.bounds.width - 16
@@ -306,7 +305,7 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
                 let hour = (detail.runtime ?? 0) / 60
                 let minutes = (detail.runtime ?? 0) % 60
                 
-                let title = detail.title ?? "-"
+                let title = detail.title
                 let info = "\(detail.releaseDate ?? "") 개봉 \(hour)시간 \(minutes)분"
                 let rate = detail.voteAverage.map { "평점 \($0)" } ?? "평점 -"
                 let overview = detail.overview ?? ""
@@ -345,203 +344,5 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
             let height = width * 1.45
             return CGSize(width: floor(width), height: floor(height))
         }
-    }
-}
-
-final class DetailInfoCell: UICollectionViewCell {
-    
-    static let identifier = "DetailInfoCell"
-    
-    private var onYouTubeTap: (() -> Void)?
-    private var onSteamedTap: (() -> Void)?
-    private var onShareTap: (() -> Void)?
-    
-    private let infoStackView: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .vertical
-        sv.spacing = 6
-        sv.alignment = .leading
-        return sv
-    }()
-    
-    private let movieTitleLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .yFont(.label2, weight: .bold)
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private let infoLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .yFont(.caption1, weight: .medium)
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private let rateLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .yFont(.label3, weight: .medium)
-        label.numberOfLines = 1
-        return label
-    }()
-    
-    private let youtubeButton: DSLargeButton = {
-        let button = DSLargeButton(buttonStyle: .primaryApp, buttonConfig: .large)
-        button.updateTitle("유튜브에서 자세히 확인하기")
-        return button
-    }()
-    
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .yFont(.caption1, weight: .medium)
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private let creditsLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = DesignSystemColor.neutralGreyLight2
-        label.font = .yFont(.caption1, weight: .light)
-        label.numberOfLines = 0
-        return label
-    }()
-    
-    private let bottomButtonStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 16
-        stack.distribution = .fill
-        return stack
-    }()
-    
-    private let steamdButton: DSIconLabelButton = {
-        let button = DSIconLabelButton(style: .featured)
-        button.setImage(DSImage.plus.image)
-        button.setTitle("내가 찜한 리스트")
-        return button
-    }()
-    
-    private let shareButton: DSIconLabelButton = {
-        let button = DSIconLabelButton(style: .featured)
-        button.setImage(DSImage.share.image)
-        button.setTitle("공유")
-        return button
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        contentView.backgroundColor = .black
-        
-        infoStackView.addArrangedSubview(movieTitleLabel)
-        infoStackView.addArrangedSubview(infoLabel)
-        infoStackView.addArrangedSubview(rateLabel)
-        
-        bottomButtonStack.addArrangedSubview(steamdButton)
-        bottomButtonStack.addArrangedSubview(shareButton)
-        bottomButtonStack.addArrangedSubview(UIView())
-        
-        contentView.addSubview(infoStackView)
-        contentView.addSubview(youtubeButton)
-        contentView.addSubview(descriptionLabel)
-        contentView.addSubview(creditsLabel)
-        contentView.addSubview(bottomButtonStack)
-        
-        youtubeButton.addTarget(self, action: #selector(tappedYouTube), for: .touchUpInside)
-        steamdButton.addTarget(self, action: #selector(tappedSteamed), for: .touchUpInside)
-        shareButton.addTarget(self, action: #selector(tappedShare), for: .touchUpInside)
-        
-        infoStackView.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(10)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        youtubeButton.snp.makeConstraints { make in
-            make.top.equalTo(infoStackView.snp.bottom).offset(10)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        descriptionLabel.snp.makeConstraints { make in
-            make.top.equalTo(youtubeButton.snp.bottom).offset(10)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        creditsLabel.snp.makeConstraints { make in
-            make.top.equalTo(descriptionLabel.snp.bottom).offset(10)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        bottomButtonStack.snp.makeConstraints { make in
-            make.top.equalTo(creditsLabel.snp.bottom).offset(30)
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
-        }
-        
-        [steamdButton, shareButton].forEach {
-            $0.snp.makeConstraints { make in
-                make.width.equalTo(contentView.snp.width).multipliedBy(0.25)
-            }
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func configure(
-        title: String,
-        info: String,
-        rate: String,
-        overview: String,
-        credits: String,
-        onYouTubeTap: @escaping () -> Void,
-        onSteamedTap: @escaping () -> Void,
-        onShareTap: @escaping () -> Void
-    ) {
-        movieTitleLabel.text = title
-        infoLabel.text = info
-        rateLabel.text = rate
-        descriptionLabel.text = overview
-        creditsLabel.text = credits
-        
-        self.onYouTubeTap = onYouTubeTap
-        self.onSteamedTap = onSteamedTap
-        self.onShareTap = onShareTap
-    }
-    
-    @objc private func tappedYouTube() { onYouTubeTap?() }
-    @objc private func tappedSteamed() { onSteamedTap?() }
-    @objc private func tappedShare() { onShareTap?() }
-}
-
-final class SimilarHeaderView: UICollectionReusableView {
-    static let identifier = "SimilarHeaderView"
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .white
-        label.font = .yFont(.label2, weight: .medium)
-        return label
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        backgroundColor = .black
-        addSubview(titleLabel)
-        titleLabel.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(8)
-            make.centerY.equalToSuperview()
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setTitle(_ text: String) {
-        titleLabel.text = text
     }
 }

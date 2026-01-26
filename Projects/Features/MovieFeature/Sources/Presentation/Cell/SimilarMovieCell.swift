@@ -10,7 +10,7 @@ import UIKit
 
 final class SimilarMovieCell: UICollectionViewCell {
     static let identifier = "SimilarMovieCell"
-
+    
     private let posterImageView = UIImageView()
     
     override init(frame: CGRect) {
@@ -52,5 +52,5 @@ final class SimilarMovieCell: UICollectionViewCell {
                 }
             }
         }
-       }
+    }
 }
