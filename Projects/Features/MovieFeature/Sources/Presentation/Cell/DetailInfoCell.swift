@@ -162,6 +162,7 @@ final class DetailInfoCell: UICollectionViewCell {
         rate: String,
         overview: String,
         credits: String,
+        hasYouTubeTrailer: Bool,
         onYouTubeTap: @escaping () -> Void,
         onSteamedTap: @escaping () -> Void,
         onShareTap: @escaping () -> Void
@@ -171,7 +172,20 @@ final class DetailInfoCell: UICollectionViewCell {
         rateLabel.text = rate
         descriptionLabel.text = overview
         creditsLabel.text = credits
-        
+
+        // YouTube 버튼 표시 여부 설정
+        youtubeButton.isHidden = !hasYouTubeTrailer
+
+        // YouTube 버튼이 숨겨지면 descriptionLabel의 top constraint를 infoStackView 기준으로 변경
+        descriptionLabel.snp.remakeConstraints { make in
+            if hasYouTubeTrailer {
+                make.top.equalTo(youtubeButton.snp.bottom).offset(10)
+            } else {
+                make.top.equalTo(infoStackView.snp.bottom).offset(10)
+            }
+            make.leading.trailing.equalToSuperview()
+        }
+
         self.onYouTubeTap = onYouTubeTap
         self.onSteamedTap = onSteamedTap
         self.onShareTap = onShareTap

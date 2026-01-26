@@ -51,7 +51,7 @@ public extension Movie {
             "/movie/\(movieID)/credits"
         case .movieDetailBundle(let movieID):
             "/movie/\(movieID)"
-        case .similarMovies(let movieID, _):
+        case .similarMovies(let movieID, let _):
             "/movie/\(movieID)/similar"
         }
     }

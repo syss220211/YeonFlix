@@ -68,11 +68,11 @@ extension TabBarCoordinator: HomeViewControllerDelegate {
             networkService: diContainer.networkService,
             apiConfig: diContainer.apiConfig
         )
-        let movieCoordinator = MovieCoordinator(
+        self.movieCoordinator = MovieCoordinator(
             navigationController: homeCoordinator?.navigationController,
             diContainer: movieDIContainer
         )
-        movieCoordinator.movieHome(movieID)
+        movieCoordinator?.movieHome(movieID)
     }
 }
 

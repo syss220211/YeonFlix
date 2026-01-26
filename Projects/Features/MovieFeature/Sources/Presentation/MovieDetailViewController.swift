@@ -35,6 +35,7 @@ public final class MovieDetailViewController: UIViewController {
     
     private var movieDetailBundle: MovieDetailBundleEntity?
     private var similarMovies: [SimilarMoviesEntity] = []
+    weak var delegate: MovieDetailControllerDelegate?
     
     // MARK: - Views
     private let loadingLabel: UILabel = {
@@ -52,17 +53,57 @@ public final class MovieDetailViewController: UIViewController {
         return WKWebView(frame: .zero, configuration: config)
     }()
     
+    private let imageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        return imageView
+    }()
+    
+    private let closeButton: UIButton = {
+        let button = UIButton()
+        let originalImage = DesignSystemAsset.icClose.image
+        let targetSize = CGSize(width: 14, height: 14)  // 원하는 크기
+        let resizedImage = originalImage
+            .resized(to: targetSize)
+            .withRenderingMode(.alwaysTemplate)
+        
+        button.setImage(resizedImage, for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = .black
+        button.layer.cornerRadius = 12.5
+        button.clipsToBounds = true
+        button.addTarget(self, action: #selector(closeButtonTapped), for: .touchUpInside)
+        return button
+    }()
+
+    private let backButton: UIButton = {
+        let button = UIButton()
+        let originalImage = DesignSystemAsset.icArrowLeft.image
+        let targetSize = CGSize(width: 24, height: 24)  // 원하는 크기
+        let resizedImage = originalImage
+            .resized(to: targetSize)
+            .withRenderingMode(.alwaysTemplate)
+        
+        button.setImage(resizedImage, for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = .black
+        button.layer.cornerRadius = 12.5
+        button.clipsToBounds = true
+        button.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         layout.minimumLineSpacing = 16
         layout.minimumInteritemSpacing = 8
         layout.sectionInset = UIEdgeInsets(top: 12, left: 8, bottom: 20, right: 8)
-        
+
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .black
         cv.showsVerticalScrollIndicator = false
-        cv.delegate = self
         cv.dataSource = self
         cv.register(DetailInfoCell.self, forCellWithReuseIdentifier: DetailInfoCell.identifier)
         cv.register(SimilarMovieCell.self, forCellWithReuseIdentifier: SimilarMovieCell.identifier)
@@ -90,12 +131,28 @@ public final class MovieDetailViewController: UIViewController {
         bind()
         viewDidLoadRelay.accept(())
     }
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateBackButtonVisibility()
+    }
+
+    private func updateBackButtonVisibility() {
+        if let navController = navigationController {
+            backButton.isHidden = navController.viewControllers.count <= 1
+        } else {
+            backButton.isHidden = true
+        }
+    }
     
     private func setupUI() {
         view.backgroundColor = .black
         view.addSubview(webView)
+        view.addSubview(imageView)
         view.addSubview(collectionView)
         view.addSubview(loadingLabel)
+        view.addSubview(closeButton)
+        view.addSubview(backButton)
     }
     
     private func setupLayout() {
@@ -103,6 +160,24 @@ public final class MovieDetailViewController: UIViewController {
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(210)
+        }
+        
+        imageView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(210)
+        }
+        
+        closeButton.snp.makeConstraints { make in
+            make.top.equalTo(webView.snp.top).offset(8)
+            make.trailing.equalTo(webView.snp.trailing).offset(-8)
+            make.width.height.equalTo(25)
+        }
+        
+        backButton.snp.makeConstraints { make in
+            make.top.equalTo(webView.snp.top).offset(8)
+            make.leading.equalTo(webView.snp.leading).offset(8)
+            make.width.height.equalTo(25)
         }
         
         collectionView.snp.makeConstraints { make in
@@ -117,11 +192,15 @@ public final class MovieDetailViewController: UIViewController {
     
     // MARK: - Bind
     private func bind() {
+        // Rx로 delegate 설정 (UICollectionViewDelegateFlowLayout 메서드들이 동작하도록)
+        collectionView.rx.setDelegate(self)
+            .disposed(by: disposeBag)
+
         let input = MovieDetailViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
             youtubeButtonTapped: youtubeButtonTapRelay.asObservable()
         )
-        
+
         let output = viewModel.transform(input: input)
         
         output.isLoading
@@ -133,7 +212,7 @@ public final class MovieDetailViewController: UIViewController {
         output.movieDetail
             .drive(with: self) { owner, bundle in
                 owner.movieDetailBundle = bundle
-                
+
                 // Trailer 영상 + 유튜브일때
                 if let trailer = bundle.videos.first(where: { $0.type == "Trailer" && $0.site == "YouTube" }),
                    let key = trailer.key {
@@ -141,8 +220,11 @@ public final class MovieDetailViewController: UIViewController {
                     if let url = URL(string: urlString) {
                         owner.webView.load(URLRequest(url: url))
                     }
+                } else {
+                    owner.showBackdropImage()
+                    owner.loadBackdropImageIfNeeded()
                 }
-                
+
                 owner.collectionView.reloadSections(IndexSet(integer: Section.detail.rawValue))
             }
             .disposed(by: disposeBag)
@@ -169,6 +251,22 @@ public final class MovieDetailViewController: UIViewController {
                 print("❌ 에러 발생\n\n\(errorMessage)")
             }
             .disposed(by: disposeBag)
+        
+        // Cell 탭했을 때 화면 이동
+        collectionView.rx.itemSelected
+            .subscribe(with: self) { owner, indexPath in
+                guard let section = Section(rawValue: indexPath.section) else { return }
+                
+                switch section {
+                case .detail:
+                    break
+                case .similar:
+                    let movie = owner.similarMovies[indexPath.item]
+                    owner.delegate?.movieDetailControllerDidSelectedSimilarMovie(movie.id)
+                }
+                owner.collectionView.deselectItem(at: indexPath, animated: true)
+            }
+            .disposed(by: disposeBag)
     }
     
     // MARK: - Actions
@@ -180,6 +278,14 @@ public final class MovieDetailViewController: UIViewController {
         let cast = data.cast.prefix(3).map { $0.name }.joined(separator: ", ")
         let crew = data.crew.prefix(3).map { $0.name }.joined(separator: ", ")
         return "출연: \(cast)\n크리에이터: \(crew)"
+    }
+    
+    @objc private func closeButtonTapped() {
+        dismiss(animated: true)
+    }
+    
+    @objc private func backButtonTapped() {
+        navigationController?.popViewController(animated: true)
     }
 }
 
@@ -215,26 +321,30 @@ extension MovieDetailViewController: UICollectionViewDataSource {
             // 데이터 주입
             if let bundle = movieDetailBundle {
                 let detail = bundle.detail
-                
+
                 let hour = (detail.runtime ?? 0) / 60
                 let minutes = (detail.runtime ?? 0) % 60
-                
+
                 let title = detail.title
                 let info = "\(detail.releaseDate ?? "") 개봉 \(hour)시간 \(minutes)분"
                 let rate = detail.voteAverage.map { "평점 \($0)" } ?? "평점 -"
                 let overview = detail.overview ?? ""
-                
+
                 var creditsText = ""
                 if let credit = bundle.credits {
                     creditsText = filterCredits(data: credit)
                 }
-                
+
+                // YouTube Trailer 존재 여부 확인
+                let hasYouTubeTrailer = bundle.videos.contains { $0.type == "Trailer" && $0.site == "YouTube" }
+
                 cell.configure(
                     title: title,
                     info: info,
                     rate: rate,
                     overview: overview,
                     credits: creditsText,
+                    hasYouTubeTrailer: hasYouTubeTrailer,
                     onYouTubeTap: { [weak self] in self?.youtubeButtonTapped() },
                     onSteamedTap: { print("찜!") },
                     onShareTap: { print("share~~~") }
@@ -304,23 +414,27 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
                 let detail = bundle.detail
                 let hour = (detail.runtime ?? 0) / 60
                 let minutes = (detail.runtime ?? 0) % 60
-                
+
                 let title = detail.title
                 let info = "\(detail.releaseDate ?? "") 개봉 \(hour)시간 \(minutes)분"
                 let rate = detail.voteAverage.map { "평점 \($0)" } ?? "평점 -"
                 let overview = detail.overview ?? ""
-                
+
                 var creditsText = ""
                 if let credit = bundle.credits {
                     creditsText = filterCredits(data: credit)
                 }
-                
+
+                // YouTube Trailer 존재 여부 확인
+                let hasYouTubeTrailer = bundle.videos.contains { $0.type == "Trailer" && $0.site == "YouTube" }
+
                 sizingCell.configure(
                     title: title,
                     info: info,
                     rate: rate,
                     overview: overview,
                     credits: creditsText,
+                    hasYouTubeTrailer: hasYouTubeTrailer,
                     onYouTubeTap: {},
                     onSteamedTap: {},
                     onShareTap: {}
@@ -345,4 +459,67 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: floor(width), height: floor(height))
         }
     }
+}
+
+// MARK: - WebView URL 성공 여부에 따른 처리
+extension MovieDetailViewController: WKNavigationDelegate {
+    public func webView(
+        _ webView: WKWebView,
+        didFail navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        showBackdropImage()
+        loadBackdropImageIfNeeded()
+    }
+
+    public func webView(
+        _ webView: WKWebView,
+        didFailProvisionalNavigation navigation: WKNavigation!,
+        withError error: Error
+    ) {
+        showBackdropImage()
+        loadBackdropImageIfNeeded()
+    }
+    
+    private func showWebView() {
+        webView.isHidden = false
+        imageView.isHidden = true
+    }
+
+    private func showBackdropImage() {
+        webView.isHidden = true
+        imageView.isHidden = false
+    }
+    
+    private func loadBackdropImageIfNeeded() {
+        guard let path = movieDetailBundle?.detail.backdropPath else {
+            imageView.image = nil
+            imageView.backgroundColor = .darkGray
+            return
+        }
+
+        let urlPath = TMDBImageURLBuilder.shared.backdropURL(path: path, size: .w780)
+        guard let url = urlPath else { return }
+        Task {
+            do {
+                let (data, _) = try await URLSession.shared.data(from: url)
+                if let image = UIImage(data: data) {
+                    await MainActor.run {
+                        self.imageView.image = image
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.imageView.backgroundColor = .darkGray
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 화면이동
+@MainActor
+public protocol MovieDetailControllerDelegate: AnyObject {
+    // 비슷한 콘텐츠으로 이동합니다.
+    func movieDetailControllerDidSelectedSimilarMovie(_ movieID: Int)
 }

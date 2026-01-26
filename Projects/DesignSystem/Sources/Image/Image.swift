@@ -19,6 +19,7 @@ public enum DSImage {
     case fillClose
     case plus
     case share
+    case arrowLeft
 
     public var image: UIImage {
         UIImage(
@@ -40,6 +41,7 @@ public enum DSImage {
         case .fillClose:    return "ic_fill_grey_close"
         case .plus:         return "ic_plus"
         case .share:        return "ic_share"
+        case .arrowLeft:    return "ic_arrow_left"
         }
     }
 }
