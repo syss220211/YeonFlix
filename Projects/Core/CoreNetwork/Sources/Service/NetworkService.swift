@@ -39,18 +39,47 @@ public final class DefaultNetworkService: NetworkService {
         let request = try requestBuilder
             .build(endpoint: endpoint, config: config)
             .get()
-        
+
+        print("📡 [NetworkService] Request: \(endpoint.method.rawValue) \(endpoint.path)")
+
         let (data, response) = try await sessionProvider.session.data(for: request)
-        
+
         guard let httpResponse = response as? HTTPURLResponse,
               (200..<300).contains(httpResponse.statusCode)
         else {
             throw NetworkError.invalidResponse
         }
-        
+
+//        #if DEBUG
+//        if let jsonString = String(data: data, encoding: .utf8) {
+//            print("📡 [NetworkService] Response JSON from \(endpoint.path):")
+//            print(jsonString)
+//        } else {
+//            print("⚠️ [NetworkService] Could not convert response data to string")
+//        }
+//        #endif
+
         do {
-            return try decoder.decode(T.self, from: data)
+            let decoded = try decoder.decode(T.self, from: data)
+
+            #if DEBUG
+            dump("✅ [NetworkService] Decoding Success: \(T.self)")
+            #endif
+
+            return decoded
         } catch {
+            #if DEBUG
+            print("❌ [NetworkService] Decoding Error")
+            print("   Endpoint: \(endpoint.path)")
+            print("   Expected Type: \(T.self)")
+            print("   Error: \(error)")
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("   Raw JSON:")
+                print(jsonString)
+            }
+            #endif
+
             throw NetworkError.decodingError(error)
         }
     }

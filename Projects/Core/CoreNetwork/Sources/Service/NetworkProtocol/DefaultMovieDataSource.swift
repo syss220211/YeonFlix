@@ -44,4 +44,15 @@ public final class DefaultMovieDataSource: MovieNetworkDataSource {
         let endPoint = Movie.upcomingMovies(page: page)
         return try await networkService.request(endpoint: endPoint)
     }
+    /// 영화 상세 정보를 가져옵니다.  (영화 상세/동영상/출연진)
+    public func fetchMovieDetails(movieId: Int) async throws -> MovieDetailBundleDTO {
+        let endPoint = Movie.movieDetailBundle(movieID: movieId)
+        return try await networkService.request(endpoint: endPoint)
+    }
+    
+    /// 유사한 영화 정보를 가져옵니다.
+    public func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedResponse<SimilarMovieDTO> {
+        let endPoint = Movie.similarMovies(movieID: movieId, page: page)
+        return try await networkService.request(endpoint: endPoint)
+    }
 }
