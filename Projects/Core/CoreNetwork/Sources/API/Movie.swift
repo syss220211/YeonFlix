@@ -27,6 +27,8 @@ public enum Movie: Endpoint {
     case movieDetailBundle(movieID: Int)
     /// 유사 영화
     case similarMovies(movieID: Int, page: Int)
+    /// Mtlti 검색
+    case searchMovie(query: String, page: Int)
     
     /// API Key 필참 여부
     public var requiresKey: Bool { true }
@@ -51,8 +53,10 @@ public extension Movie {
             "/movie/\(movieID)/credits"
         case .movieDetailBundle(let movieID):
             "/movie/\(movieID)"
-        case .similarMovies(let movieID, let _):
+        case .similarMovies(let movieID, _):
             "/movie/\(movieID)/similar"
+        case .searchMovie:
+            "/search/multi"
         }
     }
     
@@ -77,6 +81,12 @@ public extension Movie {
             return [
                 .init(name: "language", value: "ko-KR"),
                 .init(name: "append_to_response", value: "videos,credits")
+            ]
+        case .searchMovie(let query, let page):
+            return [
+                URLQueryItem(name: "query", value: "\(query)"),
+                URLQueryItem(name: "language", value: "ko-KR"),
+                URLQueryItem(name: "page", value: "\(page)"),
             ]
         }
     }
