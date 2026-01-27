@@ -44,15 +44,22 @@ public final class DSSearchBar: UIView {
     private let containerView = UIView()
     
     private let leadingIconView: UIImageView = {
-        let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
-        return iv
+        let imageView = UIImageView()
+        let originalImage = DSImage.search.image
+        let resizedImage = originalImage
+            .resized(to: CGSize(width: 16, height: 16))
+            .withRenderingMode(.alwaysTemplate)
+        imageView.image = resizedImage
+        imageView.tintColor = DesignSystemColor.neutralGrey
+        return imageView
     }()
     
     private let clearButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.contentMode = .center
-        return btn
+        let button = UIButton()
+        let originalImage = DSImage.fillClose.image
+        let resizedImage = originalImage.resized(to: CGSize(width: 16, height: 16))
+        button.setImage(resizedImage, for: .normal)
+        return button
     }()
     
     private let textField: UITextField = {
@@ -75,10 +82,6 @@ public final class DSSearchBar: UIView {
         setupViews()
         setupLayout()
         setupBehaviors()
-        
-        setLeadingIcon(DSImage.search.image)
-        setClearIcon(DSImage.fillClose.image)
-        
         updateDerivedStateAndApply()
     }
     
@@ -93,15 +96,6 @@ public final class DSSearchBar: UIView {
         textField.text = ""
         onTextChanged?("")
         updateDerivedStateAndApply()
-    }
-    
-    // MARK: - 레이아웃 설정
-    public func setLeadingIcon(_ image: UIImage?) {
-        leadingIconView.image = image?.withRenderingMode(.alwaysTemplate)
-    }
-    
-    public func setClearIcon(_ image: UIImage?) {
-        clearButton.setImage(image?.withRenderingMode(.alwaysTemplate), for: .normal)
     }
     
     private func setupViews() {
@@ -177,7 +171,6 @@ public final class DSSearchBar: UIView {
         leadingIconView.tintColor = s.iconColor
         clearButton.tintColor = s.clearIconColor
         clearButton.isHidden = !s.showsClearButton
-        
         applyPlaceholder(with: s)
         
         textField.accessibilityLabel = placeholderText

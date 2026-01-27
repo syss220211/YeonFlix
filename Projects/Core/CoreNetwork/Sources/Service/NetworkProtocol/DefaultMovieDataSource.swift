@@ -55,4 +55,10 @@ public final class DefaultMovieDataSource: MovieNetworkDataSource {
         let endPoint = Movie.similarMovies(movieID: movieId, page: page)
         return try await networkService.request(endpoint: endPoint)
     }
+    
+    /// 검색 결과를 가져옵니다.
+    public func fetchSearchResult(query: String, page: Int) async throws -> PaginatedResponse<MovieSearchDTO> {
+        let endPoint = Movie.searchMovie(query: query, page: page)
+        return try await networkService.request(endpoint: endPoint)
+    }
 }

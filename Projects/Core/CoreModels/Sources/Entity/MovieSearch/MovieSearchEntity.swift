@@ -8,7 +8,7 @@
 
 typealias MovieSearchListEntity = PaginatedEntity<MovieSearchEntity>
 
-public struct MovieSearchEntity: Decodable, Sendable {
+public struct MovieSearchEntity: Decodable, Sendable, Hashable {
     public let id: Int
     public let adult: Bool
     public let title: String
@@ -23,5 +23,36 @@ public struct MovieSearchEntity: Decodable, Sendable {
     public let video: Bool
     public let voteAverage: Double
     public let voteCount: Int
-    public let mediaType: String
+
+    public init(
+        id: Int,
+        adult: Bool,
+        title: String,
+        originalTitle: String,
+        originalLanguage: String,
+        overview: String,
+        posterPath: String?,
+        backdropPath: String?,
+        genreIds: [Int],
+        popularity: Double,
+        releaseDate: String,
+        video: Bool,
+        voteAverage: Double,
+        voteCount: Int
+    ) {
+        self.id = id
+        self.adult = adult
+        self.title = title
+        self.originalTitle = originalTitle
+        self.originalLanguage = originalLanguage
+        self.overview = overview
+        self.posterPath = posterPath
+        self.backdropPath = backdropPath
+        self.genreIds = genreIds
+        self.popularity = popularity
+        self.releaseDate = releaseDate
+        self.video = video
+        self.voteAverage = voteAverage
+        self.voteCount = voteCount
+    }
 }

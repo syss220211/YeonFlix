@@ -20,7 +20,7 @@ public extension MovieSearchListDTO {
     }
 }
 
-public struct MovieSearchDTO: Decodable, Sendable {
+public struct MovieSearchDTO: Decodable, Sendable, Equatable {
     public let id: Int
     public let adult: Bool
     public let title: String
@@ -35,8 +35,7 @@ public struct MovieSearchDTO: Decodable, Sendable {
     public let video: Bool
     public let voteAverage: Double
     public let voteCount: Int
-    public let mediaType: String
-    
+
     enum CodingKeys: String, CodingKey {
         case id
         case adult
@@ -52,7 +51,6 @@ public struct MovieSearchDTO: Decodable, Sendable {
         case releaseDate = "release_date"
         case voteAverage = "vote_average"
         case voteCount = "vote_count"
-        case mediaType = "media_type"
     }
 }
 
@@ -72,8 +70,7 @@ public extension MovieSearchDTO {
             releaseDate: self.releaseDate,
             video: self.video,
             voteAverage: self.voteAverage,
-            voteCount: self.voteCount,
-            mediaType: self.mediaType
+            voteCount: self.voteCount
         )
     }
 }

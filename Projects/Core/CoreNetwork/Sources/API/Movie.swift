@@ -27,7 +27,7 @@ public enum Movie: Endpoint {
     case movieDetailBundle(movieID: Int)
     /// 유사 영화
     case similarMovies(movieID: Int, page: Int)
-    /// Mtlti 검색
+    /// 영화 검색
     case searchMovie(query: String, page: Int)
     
     /// API Key 필참 여부
@@ -56,7 +56,7 @@ public extension Movie {
         case .similarMovies(let movieID, _):
             "/movie/\(movieID)/similar"
         case .searchMovie:
-            "/search/multi"
+            "/search/movie"
         }
     }
     
