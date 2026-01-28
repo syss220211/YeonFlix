@@ -11,6 +11,7 @@ import UIKit
 import HomeFeature
 import SearchFeature
 import MovieFeature
+import MypageFeature
 
 @MainActor
 final class TabBarCoordinator {
@@ -21,6 +22,7 @@ final class TabBarCoordinator {
     private var homeCoordinator: HomeCoordinator?
     private var searchCoordinator: SearchCoordinator?
     private var movieCoordinator: MovieCoordinator?
+    private var mypageCoordinator: MypageCoordinator?
 
     init(diContainer: AppDIContainer) {
         self.diContainer = diContainer
@@ -47,6 +49,10 @@ final class TabBarCoordinator {
             )
         )
 
+        mypageCoordinator = MypageCoordinator(
+            navigationController: myPageNav,
+            diContainer: MypageDIContainer()
+        )
 //        myPageCoordinator = MyPageCoordinator(
 //            navigationController: myPageNav,
 //            diContainer: MyPageFeatureDIContainer(
