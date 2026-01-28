@@ -39,7 +39,13 @@ final class TabBarCoordinator {
             )
         )
         
-        searchCoordinator = SearchCoordinator(navigationController: searchNav)
+        searchCoordinator = SearchCoordinator(
+            navigationController: searchNav,
+            delegate: self,
+            diContainer: SearchDIContainer(
+                movieNetworkDataSource: diContainer.movieNetworkDataSource
+            )
+        )
 
 //        myPageCoordinator = MyPageCoordinator(
 //            navigationController: myPageNav,
@@ -70,6 +76,20 @@ extension TabBarCoordinator: HomeViewControllerDelegate {
         )
         self.movieCoordinator = MovieCoordinator(
             navigationController: homeCoordinator?.navigationController,
+            diContainer: movieDIContainer
+        )
+        movieCoordinator?.movieHome(movieID)
+    }
+}
+
+extension TabBarCoordinator: SearchMovieControllerDelegate {
+    func searchMovieDetailControllerDidSelectedMovieResult(_ movieID: Int) {
+        let movieDIContainer = MovieDIContainer(
+            networkService: diContainer.networkService,
+            apiConfig: diContainer.apiConfig
+        )
+        self.movieCoordinator = MovieCoordinator(
+            navigationController: searchCoordinator?.navigationController,
             diContainer: movieDIContainer
         )
         movieCoordinator?.movieHome(movieID)
