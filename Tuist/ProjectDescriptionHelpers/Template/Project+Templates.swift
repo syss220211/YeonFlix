@@ -63,7 +63,8 @@ public extension Project {
     static func makeCoreModule(
         name: String,
         isResource: Bool,
-        dependencies: [TargetDependency] = []
+        dependencies: [TargetDependency] = [],
+        coreModel: [CoreDataModel] = []
     ) -> Project {
 
         let target = Target.target(
@@ -76,7 +77,8 @@ public extension Project {
             sources: ["Sources/**"],
             resources: isResource ? ["Resources/**"] : [],
             dependencies: dependencies,
-            settings: Settings.defaultTargetSettings()
+            settings: Settings.defaultTargetSettings(),
+            coreDataModels: coreModel
         )
 
         return Project(
