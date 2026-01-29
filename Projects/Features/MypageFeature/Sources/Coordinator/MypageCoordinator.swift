@@ -23,11 +23,9 @@ public final class MypageCoordinator {
     }
     
     public func start() {
-//        let viewModel = diContainer.makeSearchViewModel()
-//        let vc = SearchViewController(viewModel: viewModel)
-//
-//        vc.delegate = self
-//        navigationController?.setNavigationBarHidden(true, animated: false)
-//        navigationController?.pushViewController(vc, animated: true)
+        let viewModel = diContainer.makeMypageViewModel()
+        let vc = MypageViewController(viewModel: viewModel)
+        
+        navigationController?.pushViewController(vc, animated: false)
     }
 }

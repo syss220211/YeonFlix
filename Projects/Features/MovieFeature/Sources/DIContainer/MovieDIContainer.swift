@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreNetwork
+import CorePersistence
 
 @MainActor
 public final class MovieDIContainer {
@@ -33,7 +34,8 @@ public final class MovieDIContainer {
 
     private func makeMovieDetailRepository() -> MovieDetailRepository {
         return DefaultMovieDetailRepository(
-            remoteNetwork: makeMovieNetworkDataSource()
+            remoteNetwork: makeMovieNetworkDataSource(),
+            localStorage: FavoriteMovieManager.shared
         )
     }
 

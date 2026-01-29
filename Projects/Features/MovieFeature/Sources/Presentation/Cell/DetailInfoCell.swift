@@ -163,6 +163,7 @@ final class DetailInfoCell: UICollectionViewCell {
         overview: String,
         credits: String,
         hasYouTubeTrailer: Bool,
+        isFavorite: Bool,
         onYouTubeTap: @escaping () -> Void,
         onSteamedTap: @escaping () -> Void,
         onShareTap: @escaping () -> Void
@@ -185,6 +186,10 @@ final class DetailInfoCell: UICollectionViewCell {
             }
             make.leading.trailing.equalToSuperview()
         }
+
+        // 즐겨찾기 상태에 따라 버튼 이미지 변경
+        let favoriteImage = isFavorite ? DSImage.emptyGood.image : DSImage.plus.image
+        steamdButton.setImage(favoriteImage)
 
         self.onYouTubeTap = onYouTubeTap
         self.onSteamedTap = onSteamedTap

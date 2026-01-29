@@ -19,5 +19,6 @@ extension Movie {
     @NSManaged public var movieID: Int64
     @NSManaged public var title: String?
     @NSManaged public var posterPath: String?
+    @NSManaged public var movieDescription: String?
 
 }

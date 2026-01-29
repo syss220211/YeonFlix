@@ -8,6 +8,8 @@
 
 import UIKit
 
+import DesignSystem
+
 import HomeFeature
 import SearchFeature
 import MovieFeature
@@ -26,13 +28,34 @@ final class TabBarCoordinator {
 
     init(diContainer: AppDIContainer) {
         self.diContainer = diContainer
+        applyTabBarAppearance()
     }
 
+    private func applyTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+        appearance.shadowColor = .clear
+
+        tabBarController.tabBar.standardAppearance = appearance
+        tabBarController.tabBar.scrollEdgeAppearance = appearance
+        tabBarController.tabBar.isTranslucent = false
+        tabBarController.view.backgroundColor = .black
+        
+        tabBarController.tabBar.tintColor = DesignSystemColor.primaryRedDark
+        tabBarController.tabBar.unselectedItemTintColor = .darkGray
+    }
+    
     func start(in window: UIWindow) {
+        window.backgroundColor = .black
         let homeNav = UINavigationController()
         let searchNav = UINavigationController()
         let myPageNav = UINavigationController()
-
+        
+        homeNav.view.backgroundColor = .black
+        searchNav.view.backgroundColor = .black
+        myPageNav.view.backgroundColor = .black
+        
         homeCoordinator = HomeCoordinator(
             navigationController: homeNav,
             delegate: self,
@@ -53,15 +76,10 @@ final class TabBarCoordinator {
             navigationController: myPageNav,
             diContainer: MypageDIContainer()
         )
-//        myPageCoordinator = MyPageCoordinator(
-//            navigationController: myPageNav,
-//            diContainer: MyPageFeatureDIContainer(
-//                movieNetworkDataSource: diContainer.movieNetworkDataSource
-//            )
-//        )
 
         homeCoordinator?.start()
         searchCoordinator?.start()
+        mypageCoordinator?.start()
 
         homeNav.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
         searchNav.tabBarItem = UITabBarItem(title: "Search", image: UIImage(systemName: "magnifyingglass"), tag: 1)

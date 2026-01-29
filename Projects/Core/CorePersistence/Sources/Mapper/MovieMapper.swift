@@ -16,7 +16,8 @@ public enum MovieMapper {
         return FavoriteMovieEntity(
             movieID: Int(movie.movieID),
             title: movie.title ?? "",
-            posterPath: movie.posterPath
+            posterPath: movie.posterPath,
+            movieDescription: movie.movieDescription ?? ""
         )
     }
 
@@ -29,6 +30,7 @@ public enum MovieMapper {
         movie.movieID = Int64(entity.movieID)
         movie.title = entity.title
         movie.posterPath = entity.posterPath
+        movie.movieDescription = entity.movieDescription
         return movie
     }
 }

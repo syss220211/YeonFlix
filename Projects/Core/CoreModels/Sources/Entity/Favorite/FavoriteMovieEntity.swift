@@ -12,14 +12,17 @@ public struct FavoriteMovieEntity: Sendable, Hashable, Equatable {
     public let movieID: Int
     public let title: String
     public let posterPath: String?
+    public let movieDescription: String
 
     public init(
         movieID: Int,
         title: String,
-        posterPath: String?
+        posterPath: String?,
+        movieDescription: String
     ) {
         self.movieID = movieID
         self.title = title
         self.posterPath = posterPath
+        self.movieDescription = movieDescription
     }
 }

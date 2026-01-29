@@ -26,7 +26,7 @@ public final class FavoriteMovieManager {
     // MARK: - CRUD Operations
 
     /// 즐겨찾기 영화 저장
-    public func saveFavoriteMovie(movieID: Int, title: String, posterPath: String?) throws {
+    public func saveFavoriteMovie(movieID: Int, title: String, posterPath: String?, movieDescription: String) throws {
         // 이미 존재하는지 확인
         if isFavorite(movieID: movieID) {
             print("⚠️ [FavoriteMovieManager] 이미 즐겨찾기에 추가된 영화입니다: \(movieID)")
@@ -36,7 +36,8 @@ public final class FavoriteMovieManager {
         let entity = FavoriteMovieEntity(
             movieID: movieID,
             title: title,
-            posterPath: posterPath
+            posterPath: posterPath,
+            movieDescription: movieDescription
         )
 
         _ = MovieMapper.toCoreData(entity, context: context)
@@ -87,11 +88,11 @@ public final class FavoriteMovieManager {
     }
 
     /// 즐겨찾기 토글 (있으면 삭제, 없으면 추가)
-    public func toggleFavorite(movieID: Int, title: String, posterPath: String?) throws {
+    public func toggleFavorite(movieID: Int, title: String, posterPath: String?, movieDescription: String) throws {
         if isFavorite(movieID: movieID) {
             try deleteFavoriteMovie(movieID: movieID)
         } else {
-            try saveFavoriteMovie(movieID: movieID, title: title, posterPath: posterPath)
+            try saveFavoriteMovie(movieID: movieID, title: title, posterPath: posterPath, movieDescription: movieDescription)
         }
     }
 

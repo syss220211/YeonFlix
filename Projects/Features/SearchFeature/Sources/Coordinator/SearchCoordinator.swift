@@ -31,7 +31,7 @@ public final class SearchCoordinator {
 
         vc.delegate = self
         navigationController?.setNavigationBarHidden(true, animated: false)
-        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: false)
         /*
          let vc = TestSearchViewController()
          navigationController?.pushViewController(vc, animated: true)

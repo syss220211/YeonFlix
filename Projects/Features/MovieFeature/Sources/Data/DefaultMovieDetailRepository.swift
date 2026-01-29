@@ -8,13 +8,19 @@
 
 import CoreModels
 import CoreNetwork
+import CorePersistence
 
 public final class DefaultMovieDetailRepository: MovieDetailRepository {
     
     private let remoteNetwork: MovieNetworkDataSource
+    private let localStorage: FavoriteMovieManager
     
-    public init(remoteNetwork: MovieNetworkDataSource) {
+    public init(
+        remoteNetwork: MovieNetworkDataSource,
+        localStorage: FavoriteMovieManager
+    ) {
         self.remoteNetwork = remoteNetwork
+        self.localStorage = localStorage
     }
     
     public func fetchMovieDetails(movieID: Int) async throws -> CoreModels.MovieDetailBundleEntity {
@@ -24,4 +30,14 @@ public final class DefaultMovieDetailRepository: MovieDetailRepository {
     public func fetchSimilarMovies(movieId: Int, page: Int) async throws -> PaginatedEntity<SimilarMoviesEntity> {
         return try await remoteNetwork.fetchSimilarMovies(movieId: movieId, page: page).toDomain()
     }
+    
+    public func toggleMovieFavorite(movie: FavoriteMovieEntity) async throws {
+        return try await localStorage.toggleFavorite(
+            movieID: movie.movieID,
+            title: movie.title,
+            posterPath: movie.posterPath,
+            movieDescription: movie.movieDescription
+        )
+    }
+    
 }

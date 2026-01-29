@@ -29,7 +29,7 @@ public enum DSImage {
         )!
     }
 
-    private var name: String {
+    public var name: String {
         switch self {
         case .close:        return "ic_close"
         case .emptyGood:    return "ic_empty_good"

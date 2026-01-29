@@ -81,33 +81,20 @@ final class SearchViewController: UIViewController {
 
     // MARK: - LifeCycle
     override func viewDidLoad() {
+        view.backgroundColor = .black
+        
         super.viewDidLoad()
         setupUI()
-        setupLayout()
         setupGestures()
         bind()
         viewDidLoadRelay.accept(())
     }
 
     func setupUI() {
-        view.backgroundColor = .black
-
         view.addSubview(searchBar)
         view.addSubview(textLabel)
         view.addSubview(collectView)
-    }
-
-    func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-    }
-
-    @objc private func dismissKeyboard() {
-        searchBar.blur()
-    }
-
-    func setupLayout() {
+        
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(13)
             make.leading.trailing.equalToSuperview().inset(8)
@@ -124,6 +111,15 @@ final class SearchViewController: UIViewController {
         }
     }
 
+    func setupGestures() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        searchBar.blur()
+    }
     func labelText() {
         switch currentMode {
         case .default:
@@ -225,11 +221,10 @@ extension SearchViewController: UICollectionViewDataSource {
 
             let movie = popularMovies[indexPath.item]
             let backdropURL = TMDBImageURLBuilder.shared.backdropURL(path: movie.backdropPath ?? "", size: .w780)
-            cell.configure(
-                backdropURL: backdropURL,
-                title: movie.title) {
-                    self.delegate?.searchMovieDetailControllerDidSelectedMovieResult(movie.id)
-                }
+            cell.configure(backdropURL: backdropURL, title: movie.title) {
+                self.delegate?.searchMovieDetailControllerDidSelectedMovieResult(movie.id)
+            }
+            
             return cell
 
         case .searching:

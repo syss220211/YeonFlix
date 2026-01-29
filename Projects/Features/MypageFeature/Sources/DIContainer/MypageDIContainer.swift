@@ -24,8 +24,8 @@ public final class MypageDIContainer {
     }
     
     // MARK: - ViewModel
-//    public func makeSearchViewModel() -> SearchMovieViewModel {
-//        return SearchMovieViewModel(useCase: makeMovieDetailUseCase())
-//    }
+    public func makeMypageViewModel() -> MypageViewModel {
+        return MypageViewModel(useCase: self.makeMypageUseCase())
+    }
 }
 
