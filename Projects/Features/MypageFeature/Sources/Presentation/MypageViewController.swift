@@ -12,14 +12,17 @@ import CoreUtils
 import CoreModels
 import DesignSystem
 
+import RxSwift
+import RxRelay
+
 final class MypageViewController: UIViewController, UITableViewDelegate {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    weak var delegate: MypageControllerDelegate?
     private let viewDidLoadRelay = PublishRelay<Void>()
-    
     private var favoriteMovies: [FavoriteMovieEntity] = []
     private let viewModel: MypageViewModel
     private let disposeBag = DisposeBag()
@@ -80,6 +83,13 @@ final class MypageViewController: UIViewController, UITableViewDelegate {
                 owner.tableView.reloadData()
             }
             .disposed(by: disposeBag)
+        
+        tableView.rx.itemSelected
+            .subscribe(with: self) { owner, indexPath in
+                let movie = owner.favoriteMovies[indexPath.row]
+                owner.delegate?.mypageControllerSelectedSavedMovie(movie.movieID)
+            }
+            .disposed(by: disposeBag)
     }
     
     func setupUI() {
@@ -104,17 +114,31 @@ final class MypageViewController: UIViewController, UITableViewDelegate {
 extension MypageViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MyPageMovieCell.identifier, for: indexPath) as! MyPageMovieCell
-        
+
         let movie = favoriteMovies[indexPath.item]
         cell.configure(
             title: movie.title,
             description: movie.movieDescription,
             poster: TMDBImageURLBuilder.shared.posterURL(path: movie.posterPath, size: .w500)
         )
+
+        cell.bind()
+        cell.detailButtonTapped
+            .subscribe(with: self) { owner, _ in
+                owner.delegate?.mypageControllerSelectedSavedMovie(movie.movieID)
+            }
+            .disposed(by: cell.disposeBag)
+
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         favoriteMovies.count
     }
+}
+
+// MARK: - 화면이동
+@MainActor
+public protocol MypageControllerDelegate: AnyObject {
+    func mypageControllerSelectedSavedMovie(_ movieID: Int)
 }
