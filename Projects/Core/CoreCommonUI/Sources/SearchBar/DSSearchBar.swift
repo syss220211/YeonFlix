@@ -8,6 +8,7 @@
 
 import UIKit
 
+import SnapKit
 import DesignSystem
 
 public final class DSSearchBar: UIView {
@@ -114,32 +115,28 @@ public final class DSSearchBar: UIView {
     }
     
     private func setupLayout() {
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        leadingIconView.translatesAutoresizingMaskIntoConstraints = false
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        clearButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: topAnchor),
-            containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            containerView.heightAnchor.constraint(equalToConstant: config.height),
-            
-            leadingIconView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: config.horizontalPadding),
-            leadingIconView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            leadingIconView.widthAnchor.constraint(equalToConstant: config.iconSize),
-            leadingIconView.heightAnchor.constraint(equalToConstant: config.iconSize),
-            
-            clearButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -config.horizontalPadding),
-            clearButton.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            clearButton.widthAnchor.constraint(equalToConstant: config.clearIconSize),
-            clearButton.heightAnchor.constraint(equalToConstant: config.clearIconSize),
-            
-            textField.leadingAnchor.constraint(equalTo: leadingIconView.trailingAnchor, constant: config.spacing),
-            textField.trailingAnchor.constraint(equalTo: clearButton.leadingAnchor, constant: -config.spacing),
-            textField.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-        ])
+        containerView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.height.equalTo(config.height)
+        }
+
+        leadingIconView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(config.horizontalPadding)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(config.iconSize)
+        }
+
+        clearButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-config.horizontalPadding)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(config.clearIconSize)
+        }
+
+        textField.snp.makeConstraints { make in
+            make.leading.equalTo(leadingIconView.snp.trailing).offset(config.spacing)
+            make.trailing.equalTo(clearButton.snp.leading).offset(-config.spacing)
+            make.centerY.equalToSuperview()
+        }
     }
     
     // 버튼 연결 (textfield, clearbutton)
