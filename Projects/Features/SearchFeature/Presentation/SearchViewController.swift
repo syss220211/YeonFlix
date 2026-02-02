@@ -63,6 +63,7 @@ final class SearchViewController: UIViewController {
         label.textColor = .white
         label.font = .yFont(.caption2, weight: .light)
         label.text = "일치하는 내용의 결과가 없습니다."
+        label.textAlignment = .center
         return label
     }()
 
@@ -107,6 +108,8 @@ final class SearchViewController: UIViewController {
         view.addSubview(searchBar)
         view.addSubview(textLabel)
         view.addSubview(collectView)
+        view.addSubview(resultLabel)
+        resultLabel.isHidden = true
         
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(13)
@@ -121,6 +124,11 @@ final class SearchViewController: UIViewController {
         collectView.snp.makeConstraints { make in
             make.top.equalTo(textLabel.snp.bottom).offset(18)
             make.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        resultLabel.snp.makeConstraints { make in
+            make.top.equalTo(textLabel.snp.bottom).offset(35)
+            make.centerX.equalToSuperview()
         }
     }
 
@@ -167,6 +175,13 @@ final class SearchViewController: UIViewController {
                 if owner.currentMode == .searching {
                     owner.collectView.reloadData()
                 }
+                
+                let resultState = owner.currentMode == .searching
+                && results.isEmpty
+                && owner.loadingView.superview != nil
+                && !owner.searchBar.text.isEmpty
+                
+                owner.updateResultLabel(isShow: resultState)
             }
             .disposed(by: disposeBag)
 
@@ -219,16 +234,7 @@ final class SearchViewController: UIViewController {
     }
     
     private func updateResultLabel(isShow: Bool) {
-        if isShow {
-            view.addSubview(resultLabel)
-            
-            resultLabel.snp.makeConstraints { make in
-                make.top.equalTo(textLabel.snp.bottom).offset(35)
-                make.centerX.equalToSuperview()
-            }
-        } else {
-            resultLabel.removeFromSuperview()
-        }
+        resultLabel.isHidden = !isShow
     }
 }
 
