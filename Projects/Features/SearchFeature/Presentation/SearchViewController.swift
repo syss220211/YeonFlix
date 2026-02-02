@@ -37,6 +37,7 @@ final class SearchViewController: UIViewController {
             switch currentMode {
             case .default:
                 textLabel.text = "추천 영화"
+                
             case .searching:
                 textLabel.text = "검색 결과"
             }
@@ -48,11 +49,20 @@ final class SearchViewController: UIViewController {
     weak var delegate: SearchMovieControllerDelegate?
     
     private let searchBar = DSSearchBar(style: .darkDefault, configuration: .default)
+    private let toastMessage = DSToastPresenter()
+    
     private let loadingView = UIActivityIndicatorView(style: .large)
     private let textLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
         label.font = .yFont(.label2, weight: .medium)
+        return label
+    }()
+    private let resultLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = .yFont(.caption2, weight: .light)
+        label.text = "일치하는 내용의 결과가 없습니다."
         return label
     }()
 
@@ -172,7 +182,7 @@ final class SearchViewController: UIViewController {
 
         output.errorMessage
             .emit(with: self) { owner, error in
-                print("❌ Error: \(error)")
+                owner.toastMessage.show(message: "Fail to load data", type: .failure, view: owner.view)
             }
             .disposed(by: disposeBag)
         
@@ -206,6 +216,19 @@ final class SearchViewController: UIViewController {
     private func hideLoadingIndicator() {
         loadingView.stopAnimating()
         loadingView.removeFromSuperview()
+    }
+    
+    private func updateResultLabel(isShow: Bool) {
+        if isShow {
+            view.addSubview(resultLabel)
+            
+            resultLabel.snp.makeConstraints { make in
+                make.top.equalTo(textLabel.snp.bottom).offset(35)
+                make.centerX.equalToSuperview()
+            }
+        } else {
+            resultLabel.removeFromSuperview()
+        }
     }
 }
 

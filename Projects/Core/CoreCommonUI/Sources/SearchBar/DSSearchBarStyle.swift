@@ -27,7 +27,6 @@ extension DSSearchBarStyle {
                     textColor: DesignSystemColor.neutralGrey,
                     placeholderColor: DesignSystemColor.neutralGrey,
                     iconColor:  DesignSystemColor.neutralGrey,
-                    clearIconColor: DesignSystemColor.neutralGreyDark2,
                     cursorColor:  DesignSystemColor.systemBlue,
                     showsClearButton: false
                 )
@@ -37,7 +36,6 @@ extension DSSearchBarStyle {
                     textColor: DesignSystemColor.neutralGrey,
                     placeholderColor: DesignSystemColor.neutralGrey,
                     iconColor:  DesignSystemColor.neutralGrey,
-                    clearIconColor: DesignSystemColor.neutralGreyDark2,
                     cursorColor:  DesignSystemColor.systemBlue,
                     showsClearButton: false
                 )
@@ -47,7 +45,6 @@ extension DSSearchBarStyle {
                     textColor: DesignSystemColor.neutralGreyLight3,
                     placeholderColor: DesignSystemColor.neutralGrey,
                     iconColor:  DesignSystemColor.neutralGrey,
-                    clearIconColor: DesignSystemColor.neutralGreyDark2,
                     cursorColor:  DesignSystemColor.systemBlue,
                     showsClearButton: true
                 )
@@ -57,7 +54,6 @@ extension DSSearchBarStyle {
                     textColor: DesignSystemColor.neutralGreyLight3,
                     placeholderColor: DesignSystemColor.neutralGrey,
                     iconColor:  DesignSystemColor.neutralGrey,
-                    clearIconColor: DesignSystemColor.neutralGreyDark2,
                     cursorColor:  DesignSystemColor.systemBlue,
                     showsClearButton: true
                 )

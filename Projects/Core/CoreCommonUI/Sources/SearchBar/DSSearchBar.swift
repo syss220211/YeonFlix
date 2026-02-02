@@ -166,7 +166,6 @@ public final class DSSearchBar: UIView {
         textField.tintColor = s.cursorColor
         
         leadingIconView.tintColor = s.iconColor
-        clearButton.tintColor = s.clearIconColor
         clearButton.isHidden = !s.showsClearButton
         applyPlaceholder(with: s)
         
