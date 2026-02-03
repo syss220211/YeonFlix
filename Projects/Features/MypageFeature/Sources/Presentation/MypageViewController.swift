@@ -10,31 +10,33 @@ import UIKit
 
 import CoreUtils
 import CoreModels
+import CorePersistence
 import DesignSystem
 
 import RxSwift
 import RxRelay
 
 final class MypageViewController: UIViewController, UITableViewDelegate {
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     weak var delegate: MypageControllerDelegate?
     private let viewDidLoadRelay = PublishRelay<Void>()
     private var favoriteMovies: [FavoriteMovieEntity] = []
     private let viewModel: MypageViewModel
     private let disposeBag = DisposeBag()
-    
+
     private let tableView = UITableView()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
         setupNavigationbar()
         setupUI()
         bind()
+        bindFavoritesChange()
         viewDidLoadRelay.accept(())
     }
     
@@ -76,18 +78,28 @@ final class MypageViewController: UIViewController, UITableViewDelegate {
     func bind() {
         let input = MypageViewModel.Input(viewDidLoad: viewDidLoadRelay.asObservable())
         let output = viewModel.transform(input: input)
-        
+
         output.favortieMovies
             .drive(with: self) { owner, movies in
                 owner.favoriteMovies = movies
                 owner.tableView.reloadData()
             }
             .disposed(by: disposeBag)
-        
+
         tableView.rx.itemSelected
             .subscribe(with: self) { owner, indexPath in
                 let movie = owner.favoriteMovies[indexPath.row]
                 owner.delegate?.mypageControllerSelectedSavedMovie(movie.movieID)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    /// 찜 목록 변경 이벤트 구독 (다른 탭에서 찜 추가/삭제 시 자동 갱신)
+    private func bindFavoritesChange() {
+        FavoriteMovieManager.shared.favoritesDidChange
+            .subscribe(with: self) { owner, _ in
+                print("🔄 [MypageViewController] 찜 목록 변경 감지 → 자동 새로고침")
+                owner.viewDidLoadRelay.accept(())
             }
             .disposed(by: disposeBag)
     }

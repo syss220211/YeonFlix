@@ -13,7 +13,8 @@ let CorePersistenceProject = Project.makeCoreModule(
     name: "CorePersistence",
     isResource: false,
     dependencies: [
-        .project(target: "CoreModels", path: .relativeToRoot("Projects/Core/CoreModels"))
+        .project(target: "CoreModels", path: .relativeToRoot("Projects/Core/CoreModels")),
+        .project(target: "CoreRx", path: "../../Core/CoreRx")
     ],
     coreModel: [.coreDataModel("Resources/FavoriteMovieModel.xcdatamodeld")]
 )

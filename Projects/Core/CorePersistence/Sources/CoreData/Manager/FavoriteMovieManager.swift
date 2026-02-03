@@ -7,8 +7,13 @@
 //
 
 import Foundation
+
+import RxSwift
+import RxRelay
+
 import CoreData
 import CoreModels
+
 
 @MainActor
 public final class FavoriteMovieManager {
@@ -17,6 +22,15 @@ public final class FavoriteMovieManager {
     private let persistenceController: PersistenceController
     private var context: NSManagedObjectContext {
         persistenceController.container.viewContext
+    }
+
+    // MARK: - Reactive State
+    /// 즐겨찾기 목록이 변경될 때마다 이벤트 방출
+    private let favoritesChangeRelay = PublishRelay<Void>()
+
+    /// 즐겨찾기 변경 이벤트 스트림 (다른 모듈에서 구독 가능)
+    public var favoritesDidChange: Observable<Void> {
+        favoritesChangeRelay.asObservable()
     }
 
     private init(persistenceController: PersistenceController = .shared) {
@@ -44,6 +58,9 @@ public final class FavoriteMovieManager {
 
         try context.save()
         print("✅ [FavoriteMovieManager] 즐겨찾기 저장 완료: \(title)")
+
+        // 변경 이벤트 방출
+        favoritesChangeRelay.accept(())
     }
 
     /// 모든 즐겨찾기 영화 가져오기
@@ -70,6 +87,9 @@ public final class FavoriteMovieManager {
         context.delete(movie)
         try context.save()
         print("✅ [FavoriteMovieManager] 즐겨찾기 삭제 완료: \(movieID)")
+
+        // 변경 이벤트 방출
+        favoritesChangeRelay.accept(())
     }
 
     /// 즐겨찾기 여부 확인
@@ -104,5 +124,8 @@ public final class FavoriteMovieManager {
         try context.execute(deleteRequest)
         try context.save()
         print("✅ [FavoriteMovieManager] 모든 즐겨찾기 삭제 완료")
+
+        // 변경 이벤트 방출
+        favoritesChangeRelay.accept(())
     }
 }
