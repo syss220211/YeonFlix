@@ -20,7 +20,6 @@ public struct DSSearchBarVisualStyle: Equatable {
     public let textColor: UIColor
     public let placeholderColor: UIColor
     public let iconColor: UIColor
-    public let clearIconColor: UIColor
     public let cursorColor: UIColor
     public let showsClearButton: Bool
 
@@ -29,7 +28,6 @@ public struct DSSearchBarVisualStyle: Equatable {
         textColor: UIColor,
         placeholderColor: UIColor,
         iconColor: UIColor,
-        clearIconColor: UIColor,
         cursorColor: UIColor,
         showsClearButton: Bool
     ) {
@@ -37,7 +35,6 @@ public struct DSSearchBarVisualStyle: Equatable {
         self.textColor = textColor
         self.placeholderColor = placeholderColor
         self.iconColor = iconColor
-        self.clearIconColor = clearIconColor
         self.cursorColor = cursorColor
         self.showsClearButton = showsClearButton
     }

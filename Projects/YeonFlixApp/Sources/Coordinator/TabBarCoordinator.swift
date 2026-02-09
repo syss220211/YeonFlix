@@ -8,9 +8,12 @@
 
 import UIKit
 
+import DesignSystem
+
 import HomeFeature
 import SearchFeature
 import MovieFeature
+import MypageFeature
 
 @MainActor
 final class TabBarCoordinator {
@@ -21,16 +24,38 @@ final class TabBarCoordinator {
     private var homeCoordinator: HomeCoordinator?
     private var searchCoordinator: SearchCoordinator?
     private var movieCoordinator: MovieCoordinator?
+    private var mypageCoordinator: MypageCoordinator?
 
     init(diContainer: AppDIContainer) {
         self.diContainer = diContainer
+        applyTabBarAppearance()
     }
 
+    private func applyTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+        appearance.shadowColor = .clear
+
+        tabBarController.tabBar.standardAppearance = appearance
+        tabBarController.tabBar.scrollEdgeAppearance = appearance
+        tabBarController.tabBar.isTranslucent = false
+        tabBarController.view.backgroundColor = .black
+        
+        tabBarController.tabBar.tintColor = DesignSystemColor.primaryRedDark
+        tabBarController.tabBar.unselectedItemTintColor = .darkGray
+    }
+    
     func start(in window: UIWindow) {
+        window.backgroundColor = .black
         let homeNav = UINavigationController()
         let searchNav = UINavigationController()
         let myPageNav = UINavigationController()
-
+        
+        homeNav.view.backgroundColor = .black
+        searchNav.view.backgroundColor = .black
+        myPageNav.view.backgroundColor = .black
+        
         homeCoordinator = HomeCoordinator(
             navigationController: homeNav,
             delegate: self,
@@ -47,15 +72,15 @@ final class TabBarCoordinator {
             )
         )
 
-//        myPageCoordinator = MyPageCoordinator(
-//            navigationController: myPageNav,
-//            diContainer: MyPageFeatureDIContainer(
-//                movieNetworkDataSource: diContainer.movieNetworkDataSource
-//            )
-//        )
+        mypageCoordinator = MypageCoordinator(
+            navigationController: myPageNav,
+            delegate: self,
+            diContainer: MypageDIContainer()
+        )
 
         homeCoordinator?.start()
         searchCoordinator?.start()
+        mypageCoordinator?.start()
 
         homeNav.tabBarItem = UITabBarItem(title: "Home", image: UIImage(systemName: "house"), tag: 0)
         searchNav.tabBarItem = UITabBarItem(title: "Search", image: UIImage(systemName: "magnifyingglass"), tag: 1)
@@ -82,7 +107,7 @@ extension TabBarCoordinator: HomeViewControllerDelegate {
     }
 }
 
-extension TabBarCoordinator: SearchMovieControllerDelegate {
+extension TabBarCoordinator: SearchMovieControllerDelegate, MypageControllerDelegate {
     func searchMovieDetailControllerDidSelectedMovieResult(_ movieID: Int) {
         let movieDIContainer = MovieDIContainer(
             networkService: diContainer.networkService,
@@ -90,6 +115,18 @@ extension TabBarCoordinator: SearchMovieControllerDelegate {
         )
         self.movieCoordinator = MovieCoordinator(
             navigationController: searchCoordinator?.navigationController,
+            diContainer: movieDIContainer
+        )
+        movieCoordinator?.movieHome(movieID)
+    }
+    
+    func mypageControllerSelectedSavedMovie(_ movieID: Int) {
+        let movieDIContainer = MovieDIContainer(
+            networkService: diContainer.networkService,
+            apiConfig: diContainer.apiConfig
+        )
+        self.movieCoordinator = MovieCoordinator(
+            navigationController: mypageCoordinator?.navigationController,
             diContainer: movieDIContainer
         )
         movieCoordinator?.movieHome(movieID)

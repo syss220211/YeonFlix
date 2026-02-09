@@ -31,10 +31,12 @@ public final class MovieDetailViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     private let youtubeButtonTapRelay = PublishRelay<Void>()
+    private let favoriteButtonTapRelay = PublishRelay<Void>()
     private let viewDidLoadRelay = PublishRelay<Void>()
     
     private var movieDetailBundle: MovieDetailBundleEntity?
     private var similarMovies: [SimilarMoviesEntity] = []
+    private var isFavorite: Bool = false
     weak var delegate: MovieDetailControllerDelegate?
     
     // MARK: - Views
@@ -198,7 +200,8 @@ public final class MovieDetailViewController: UIViewController {
 
         let input = MovieDetailViewModel.Input(
             viewDidLoad: viewDidLoadRelay.asObservable(),
-            youtubeButtonTapped: youtubeButtonTapRelay.asObservable()
+            youtubeButtonTapped: youtubeButtonTapRelay.asObservable(),
+            favoriteButtonTapped: favoriteButtonTapRelay.asObservable()
         )
 
         let output = viewModel.transform(input: input)
@@ -249,6 +252,13 @@ public final class MovieDetailViewController: UIViewController {
         output.errorMessage
             .emit(with: self) { owner, errorMessage in
                 print("❌ 에러 발생\n\n\(errorMessage)")
+            }
+            .disposed(by: disposeBag)
+
+        output.isFavorite
+            .drive(with: self) { owner, isFav in
+                owner.isFavorite = isFav
+                owner.collectionView.reloadSections(IndexSet(integer: Section.detail.rawValue))
             }
             .disposed(by: disposeBag)
         
@@ -345,8 +355,9 @@ extension MovieDetailViewController: UICollectionViewDataSource {
                     overview: overview,
                     credits: creditsText,
                     hasYouTubeTrailer: hasYouTubeTrailer,
+                    isFavorite: self.isFavorite,
                     onYouTubeTap: { [weak self] in self?.youtubeButtonTapped() },
-                    onSteamedTap: { print("찜!") },
+                    onSteamedTap: { [weak self] in self?.favoriteButtonTapRelay.accept(()) },
                     onShareTap: { print("share~~~") }
                 )
             }
@@ -435,6 +446,7 @@ extension MovieDetailViewController: UICollectionViewDelegateFlowLayout {
                     overview: overview,
                     credits: creditsText,
                     hasYouTubeTrailer: hasYouTubeTrailer,
+                    isFavorite: self.isFavorite,
                     onYouTubeTap: {},
                     onSteamedTap: {},
                     onShareTap: {}

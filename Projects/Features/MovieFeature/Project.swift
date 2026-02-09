@@ -18,5 +18,6 @@ let MovieFeatureProject = Project.makeFeatureModule(
         .project(target: "DesignSystem", path: "../../DesignSystem"),
         .project(target: "CoreSecurity", path: "../../Core/CoreSecurity"),
         .project(target: "CoreRx", path: "../../Core/CoreRx"),
+        .project(target: "CorePersistence", path: "../../Core/CorePersistence"),
     ]
 )

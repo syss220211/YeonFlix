@@ -44,6 +44,21 @@ public final class TMDBImageURLBuilder {
         let baseURL = configuration?.baseURL ?? fallbackBaseURL
         return URL(string: "\(baseURL)/\(finalSize)\(path)")
     }
+    
+    /// Poster 이미지 URL을 생성합니다.
+    public func posterURLString(path: String?, size: PosterSize = .w500) -> String {
+        guard let path = path else { return "" }
+
+        let requestedSize = size.rawValue
+        let finalSize = validateAndFindBestSize(
+            requested: requestedSize,
+            availableSizes: configuration?.posterSizes ?? [],
+            sizeType: "poster"
+        )
+
+        let baseURL = configuration?.baseURL ?? fallbackBaseURL
+        return "\(baseURL)/\(finalSize)\(path)"
+    }
 
     /// Backdrop 이미지 URL을 생성합니다.
     public func backdropURL(path: String?, size: BackdropSize = .w1280) -> URL? {

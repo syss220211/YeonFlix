@@ -30,7 +30,7 @@ public final class HomeCoordinator {
         let vc = HomeViewController(viewModel: vm)
 
         vc.delegate = self
-        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: false)
     }
 }
 

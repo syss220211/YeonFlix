@@ -25,30 +25,45 @@ final class SearchViewController: UIViewController {
         case searching
     }
 
-    // MARK: - Props
     private let viewModel: SearchMovieViewModel
     private let disposeBag = DisposeBag()
 
     private let viewDidLoadRelay = PublishRelay<Void>()
     private let searchTextRelay = PublishRelay<String>()
-
     private var currentMode: SearchMode = .default {
         didSet {
             collectView.reloadData()
-            labelText()
+            
+            switch currentMode {
+            case .default:
+                textLabel.text = "추천 영화"
+                
+            case .searching:
+                textLabel.text = "검색 결과"
+            }
         }
     }
 
     private var popularMovies: [PopularMoviesEntity] = []
     private var searchResults: [MovieSearchEntity] = []
     weak var delegate: SearchMovieControllerDelegate?
-    // MARK: - Views
+    
     private let searchBar = DSSearchBar(style: .darkDefault, configuration: .default)
-
+    private let toastMessage = DSToastPresenter()
+    
+    private let loadingView = UIActivityIndicatorView(style: .large)
     private let textLabel: UILabel = {
         let label = UILabel()
         label.textColor = .white
         label.font = .yFont(.label2, weight: .medium)
+        return label
+    }()
+    private let resultLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .white
+        label.font = .yFont(.caption2, weight: .light)
+        label.text = "일치하는 내용의 결과가 없습니다."
+        label.textAlignment = .center
         return label
     }()
 
@@ -68,8 +83,7 @@ final class SearchViewController: UIViewController {
         cv.register(SearchResultCell.self, forCellWithReuseIdentifier: SearchResultCell.identifier)
         return cv
     }()
-
-    // MARK: - Init
+    
     init(viewModel: SearchMovieViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -78,36 +92,25 @@ final class SearchViewController: UIViewController {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    // MARK: - LifeCycle
+    
     override func viewDidLoad() {
+        view.backgroundColor = .black
         super.viewDidLoad()
+        
         setupUI()
-        setupLayout()
-        setupGestures()
         bind()
+        setupGestures()
+        
         viewDidLoadRelay.accept(())
     }
 
     func setupUI() {
-        view.backgroundColor = .black
-
         view.addSubview(searchBar)
         view.addSubview(textLabel)
         view.addSubview(collectView)
-    }
-
-    func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-    }
-
-    @objc private func dismissKeyboard() {
-        searchBar.blur()
-    }
-
-    func setupLayout() {
+        view.addSubview(resultLabel)
+        resultLabel.isHidden = true
+        
         searchBar.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(13)
             make.leading.trailing.equalToSuperview().inset(8)
@@ -122,20 +125,24 @@ final class SearchViewController: UIViewController {
             make.top.equalTo(textLabel.snp.bottom).offset(18)
             make.leading.trailing.bottom.equalToSuperview()
         }
-    }
-
-    func labelText() {
-        switch currentMode {
-        case .default:
-            textLabel.text = "추천 영화"
-        case .searching:
-            textLabel.text = "검색 결과"
+        
+        resultLabel.snp.makeConstraints { make in
+            make.top.equalTo(textLabel.snp.bottom).offset(35)
+            make.centerX.equalToSuperview()
         }
     }
 
-    // MARK: - Bind
+    func setupGestures() {
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func dismissKeyboard() {
+        searchBar.blur()
+    }
+    
     private func bind() {
-        // SearchBar 텍스트 변경 연결
         searchBar.onTextChanged = { [weak self] text in
             self?.searchTextRelay.accept(text)
         }
@@ -147,14 +154,12 @@ final class SearchViewController: UIViewController {
 
         let output = viewModel.transform(input: input)
 
-        // 검색 모드 변경
         output.searchMode
             .drive(with: self) { owner, mode in
                 owner.currentMode = mode
             }
             .disposed(by: disposeBag)
-
-        // 인기 영화 데이터
+        
         output.popularMovies
             .drive(with: self) { owner, movies in
                 owner.popularMovies = movies
@@ -164,27 +169,35 @@ final class SearchViewController: UIViewController {
             }
             .disposed(by: disposeBag)
 
-        // 검색 결과 데이터
         output.searchResults
             .drive(with: self) { owner, results in
                 owner.searchResults = results
                 if owner.currentMode == .searching {
                     owner.collectView.reloadData()
                 }
+                
+                let resultState = owner.currentMode == .searching
+                && results.isEmpty
+                && owner.loadingView.superview != nil
+                && !owner.searchBar.text.isEmpty
+                
+                owner.updateResultLabel(isShow: resultState)
             }
             .disposed(by: disposeBag)
 
-        // 로딩 상태
         output.isLoading
             .drive(with: self) { owner, isLoading in
-                print(isLoading ? "🔄 Loading..." : "✅ Loaded")
+                if isLoading {
+                    owner.showLoadingIndicator()
+                } else {
+                    owner.hideLoadingIndicator()
+                }
             }
             .disposed(by: disposeBag)
 
-        // 에러 메시지
         output.errorMessage
             .emit(with: self) { owner, error in
-                print("❌ Error: \(error)")
+                owner.toastMessage.show(message: "Fail to load data", type: .failure, view: owner.view)
             }
             .disposed(by: disposeBag)
         
@@ -202,6 +215,26 @@ final class SearchViewController: UIViewController {
                 owner.delegate?.searchMovieDetailControllerDidSelectedMovieResult(movieID)
             }
             .disposed(by: disposeBag)
+    }
+    
+    private func showLoadingIndicator() {
+        guard loadingView.superview == nil else { return }
+        loadingView.color = .white
+        view.addSubview(loadingView)
+        
+        loadingView.startAnimating()
+        loadingView.snp.makeConstraints { make in
+            make.centerX.centerY.equalToSuperview()
+        }
+    }
+    
+    private func hideLoadingIndicator() {
+        loadingView.stopAnimating()
+        loadingView.removeFromSuperview()
+    }
+    
+    private func updateResultLabel(isShow: Bool) {
+        resultLabel.isHidden = !isShow
     }
 }
 
@@ -225,11 +258,10 @@ extension SearchViewController: UICollectionViewDataSource {
 
             let movie = popularMovies[indexPath.item]
             let backdropURL = TMDBImageURLBuilder.shared.backdropURL(path: movie.backdropPath ?? "", size: .w780)
-            cell.configure(
-                backdropURL: backdropURL,
-                title: movie.title) {
-                    self.delegate?.searchMovieDetailControllerDidSelectedMovieResult(movie.id)
-                }
+            cell.configure(backdropURL: backdropURL, title: movie.title) {
+                self.delegate?.searchMovieDetailControllerDidSelectedMovieResult(movie.id)
+            }
+            
             return cell
 
         case .searching:
@@ -275,93 +307,4 @@ extension SearchViewController: UICollectionViewDelegateFlowLayout {
 public protocol SearchMovieControllerDelegate: AnyObject {
     // 검색 영화 상세 화면으로 이동합니다.
     func searchMovieDetailControllerDidSelectedMovieResult(_ movieID: Int)
-}
-
-@MainActor
-public final class SearchMovieViewModel {
-    struct Input {
-        let viewDidLoad: Observable<Void>
-        let searchTextChanged: Observable<String>
-    }
-
-    struct Output {
-        let popularMovies: Driver<[PopularMoviesEntity]>
-        let searchResults: Driver<[MovieSearchEntity]>
-        let isLoading: Driver<Bool>
-        let errorMessage: Signal<String>
-        let searchMode: Driver<SearchViewController.SearchMode>
-    }
-
-    private let useCase: SearchUseCase
-    private let disposeBag = DisposeBag()
-
-    private let popularMoviesRelay = BehaviorRelay<[PopularMoviesEntity]>(value: [])
-    private let searchResultsRelay = BehaviorRelay<[MovieSearchEntity]>(value: [])
-    private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
-    private let errorMessageRelay = PublishRelay<String>()
-    private let searchModeRelay = BehaviorRelay<SearchViewController.SearchMode>(value: .default)
-    
-    public init(useCase: SearchUseCase) {
-        self.useCase = useCase
-    }
-
-    func transform(input: Input) -> Output {
-        // viewDidLoad 시 인기 영화 로드
-        input.viewDidLoad
-            .subscribe(with: self) { owner, _ in
-                owner.fetchPopularMovies(page: 1)
-            }
-            .disposed(by: disposeBag)
-
-        // 검색어 변경 처리 (디바운싱 0.5초)
-        input.searchTextChanged
-            .debounce(.milliseconds(500), scheduler: MainScheduler.instance)
-            .distinctUntilChanged()
-            .subscribe(with: self) { owner, query in
-                if query.isEmpty {
-                    owner.searchModeRelay.accept(.default)
-                    owner.searchResultsRelay.accept([])
-                } else {
-                    owner.searchModeRelay.accept(.searching)
-                    owner.fetchSearchMovies(query: query, page: 1)
-                }
-            }
-            .disposed(by: disposeBag)
-
-        return Output(
-            popularMovies: popularMoviesRelay.asDriver(),
-            searchResults: searchResultsRelay.asDriver(),
-            isLoading: isLoadingRelay.asDriver(),
-            errorMessage: errorMessageRelay.asSignal(),
-            searchMode: searchModeRelay.asDriver()
-        )
-    }
-
-    private func fetchPopularMovies(page: Int) {
-        isLoadingRelay.accept(true)
-
-        Task { [useCase] in
-            do {
-                let response = try await useCase.fetchPopularMovies(page: page)
-                popularMoviesRelay.accept(response.results)
-            } catch {
-                errorMessageRelay.accept(error.localizedDescription)
-            }
-            isLoadingRelay.accept(false)
-        }
-    }
-
-    private func fetchSearchMovies(query: String, page: Int) {
-        isLoadingRelay.accept(true)
-
-        Task { [useCase] in
-            do {
-                let response = try await useCase.fetchSearchMovies(query: query, page: page)
-                searchResultsRelay.accept(response.results)
-            } catch {
-                errorMessageRelay.accept(error.localizedDescription)
-            }
-            isLoadingRelay.accept(false)
-        }
-    }
 }

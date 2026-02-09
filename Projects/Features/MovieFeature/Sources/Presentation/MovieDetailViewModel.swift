@@ -7,6 +7,7 @@
 //
 
 import CoreModels
+import CorePersistence
 
 import RxSwift
 import RxRelay
@@ -17,6 +18,7 @@ public final class MovieDetailViewModel {
     struct Input {
         let viewDidLoad: Observable<Void>
         let youtubeButtonTapped: Observable<Void>
+        let favoriteButtonTapped: Observable<Void>
     }
 
     struct Output {
@@ -25,8 +27,9 @@ public final class MovieDetailViewModel {
         let isLoading: Driver<Bool>
         let errorMessage: Signal<String>
         let openYouTubeURL: Signal<String>
+        let isFavorite: Driver<Bool>
     }
-    
+
     private let useCase: MovieDetailUseCase
     private let movieID: Int
     private let disposeBag = DisposeBag()
@@ -36,6 +39,7 @@ public final class MovieDetailViewModel {
     private let isLoadingRelay = BehaviorRelay<Bool>(value: false)
     private let errorMessageRelay = PublishRelay<String>()
     private let openYouTubeRelay = PublishRelay<String>()
+    private let isFavoriteRelay = BehaviorRelay<Bool>(value: false)
     
     public init(movieID: Int, useCase: MovieDetailUseCase) {
         self.movieID = movieID
@@ -47,6 +51,7 @@ public final class MovieDetailViewModel {
             .subscribe(with: self) { owner, _ in
                 owner.fetchMovieDetail()
                 owner.fetchSimilarMovies(page: 1)
+                owner.checkFavoriteStatus()
             }
             .disposed(by: disposeBag)
 
@@ -61,7 +66,14 @@ public final class MovieDetailViewModel {
                 }
             }
             .disposed(by: disposeBag)
-        
+
+        input.favoriteButtonTapped
+            .withLatestFrom(movieDetailRelay.compactMap { $0 })
+            .subscribe(with: self) { owner, movieDetail in
+                owner.toggleFavorite(movieDetail: movieDetail)
+            }
+            .disposed(by: disposeBag)
+
         return Output(
             movieDetail: movieDetailRelay
                 .compactMap { $0 }
@@ -69,7 +81,8 @@ public final class MovieDetailViewModel {
             similarMovies: similarMoviesRelay.asDriver(),
             isLoading: isLoadingRelay.asDriver(),
             errorMessage: errorMessageRelay.asSignal(),
-            openYouTubeURL: openYouTubeRelay.asSignal()
+            openYouTubeURL: openYouTubeRelay.asSignal(),
+            isFavorite: isFavoriteRelay.asDriver()
         )
     }
 
@@ -96,6 +109,30 @@ public final class MovieDetailViewModel {
             } catch {
                 errorMessageRelay.accept(error.localizedDescription)
             }
+        }
+    }
+
+    private func checkFavoriteStatus() {
+        let isFavorite = FavoriteMovieManager.shared.isFavorite(movieID: movieID)
+        isFavoriteRelay.accept(isFavorite)
+    }
+
+    private func toggleFavorite(movieDetail: MovieDetailBundleEntity) {
+        let detail = movieDetail.detail
+
+        do {
+            try FavoriteMovieManager.shared.toggleFavorite(
+                movieID: movieID,
+                title: detail.title,
+                posterPath: detail.posterPath,
+                movieDescription: detail.overview ?? ""
+            )
+
+            // 상태 업데이트
+            let newStatus = FavoriteMovieManager.shared.isFavorite(movieID: movieID)
+            isFavoriteRelay.accept(newStatus)
+        } catch {
+            errorMessageRelay.accept("즐겨찾기 처리 실패: \(error.localizedDescription)")
         }
     }
 }

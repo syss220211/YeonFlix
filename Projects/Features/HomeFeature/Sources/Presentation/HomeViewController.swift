@@ -65,10 +65,24 @@ final class HomeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
+        setupNavigationBar()
         setupUI()
+        
         configureDataSource()
         bind()
         applyInitialSnapshot()
+    }
+    
+    private func setupNavigationBar() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .black
+        appearance.shadowColor = .clear
+
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.isTranslucent = false
     }
     
     private func setupUI() {
@@ -112,7 +126,7 @@ final class HomeViewController: UIViewController {
             let sectionLayout = NSCollectionLayoutSection(group: group)
             sectionLayout.orthogonalScrollingBehavior = .continuousGroupLeadingBoundary
             sectionLayout.interGroupSpacing = 8
-            sectionLayout.contentInsets = .init(top: 8, leading: 16, bottom: 24, trailing: 16)
+            sectionLayout.contentInsets = .init(top: 8, leading: 8, bottom: 24, trailing: 8)
             
             let headerSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
