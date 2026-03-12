@@ -53,6 +53,7 @@ public final class MyPageMovieCell: UITableViewCell {
         label.textColor = .white
         label.font = .yFont(.caption1, weight: .bold)
         label.numberOfLines = 0
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
         return label
     }()
     
@@ -62,9 +63,10 @@ public final class MyPageMovieCell: UITableViewCell {
         label.textColor = DesignSystemColor.neutralGreyLight2
         label.textAlignment = .left
         label.numberOfLines = 0
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
-    
+
     private let detailButton: UIButton = {
         let button = UIButton()
         button.setTitle("상세로 이동", for: .normal)
@@ -99,6 +101,7 @@ public final class MyPageMovieCell: UITableViewCell {
             make.leading.equalTo(posterImageView.snp.trailing).offset(10)
             make.top.equalTo(titleLabel.snp.bottom).offset(4)
             make.trailing.equalTo(detailButton.snp.leading).offset(-8)
+            make.bottom.lessThanOrEqualTo(posterImageView.snp.bottom)
         }
 
         detailButton.snp.makeConstraints { make in

@@ -74,28 +74,43 @@ public final class DSToastView: UIView {
 @MainActor
 public protocol DSToastMessagePresenting: AnyObject {
     func show(message: String, type: ToastType, view: UIView)
+    func show(message: String, type: ToastType)
 }
 
 public final class DSToastPresenter: DSToastMessagePresenting {
-    
+
     public init() { }
-    
+
     @MainActor
     public func show(message: String, type: ToastType, view: UIView) {
+        present(message: message, type: type, in: view)
+    }
+
+    @MainActor
+    public func show(message: String, type: ToastType) {
+        guard let window = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow }) else { return }
+        present(message: message, type: type, in: window)
+    }
+
+    @MainActor
+    private func present(message: String, type: ToastType, in view: UIView) {
         view.subviews
             .filter { $0 is DSToastView }
             .forEach { $0.removeFromSuperview() }
-        
+
         let toast = DSToastView(type: type, message: message)
         toast.alpha = 0
         view.addSubview(toast)
-        
+
         toast.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalTo(view.safeAreaLayoutGuide).offset(60)
             make.width.equalTo(view.snp.width).multipliedBy(0.85)
         }
-        
+
         UIView.animate(withDuration: 0.2) { toast.alpha = 0.7 }
         UIView.animate(withDuration: 0.2, delay: 1.5) {
             toast.alpha = 0

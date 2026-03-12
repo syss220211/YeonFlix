@@ -28,6 +28,7 @@ public final class MovieDetailViewModel {
         let errorMessage: Signal<String>
         let openYouTubeURL: Signal<String>
         let isFavorite: Driver<Bool>
+        let favoriteResult: Signal<Bool> // true: 추가 성공, false: 제거 성공
     }
 
     private let useCase: MovieDetailUseCase
@@ -40,6 +41,7 @@ public final class MovieDetailViewModel {
     private let errorMessageRelay = PublishRelay<String>()
     private let openYouTubeRelay = PublishRelay<String>()
     private let isFavoriteRelay = BehaviorRelay<Bool>(value: false)
+    private let favoriteResultRelay = PublishRelay<Bool>()
     
     public init(movieID: Int, useCase: MovieDetailUseCase) {
         self.movieID = movieID
@@ -82,7 +84,8 @@ public final class MovieDetailViewModel {
             isLoading: isLoadingRelay.asDriver(),
             errorMessage: errorMessageRelay.asSignal(),
             openYouTubeURL: openYouTubeRelay.asSignal(),
-            isFavorite: isFavoriteRelay.asDriver()
+            isFavorite: isFavoriteRelay.asDriver(),
+            favoriteResult: favoriteResultRelay.asSignal()
         )
     }
 
@@ -131,6 +134,7 @@ public final class MovieDetailViewModel {
             // 상태 업데이트
             let newStatus = FavoriteMovieManager.shared.isFavorite(movieID: movieID)
             isFavoriteRelay.accept(newStatus)
+            favoriteResultRelay.accept(newStatus)
         } catch {
             errorMessageRelay.accept("즐겨찾기 처리 실패: \(error.localizedDescription)")
         }
