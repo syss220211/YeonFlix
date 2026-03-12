@@ -29,6 +29,7 @@ public final class MovieDetailViewController: UIViewController {
     // MARK: - Props
     private let viewModel: MovieDetailViewModel
     private let disposeBag = DisposeBag()
+    private let toastPresenter = DSToastPresenter()
     
     private let youtubeButtonTapRelay = PublishRelay<Void>()
     private let favoriteButtonTapRelay = PublishRelay<Void>()
@@ -252,6 +253,15 @@ public final class MovieDetailViewController: UIViewController {
         output.errorMessage
             .emit(with: self) { owner, errorMessage in
                 print("❌ 에러 발생\n\n\(errorMessage)")
+                owner.toastPresenter.show(message: errorMessage, type: .failure)
+            }
+            .disposed(by: disposeBag)
+
+        output.favoriteResult
+            .emit(with: self) { owner, isAdded in
+                let message = isAdded ? "찜 목록에 추가되었습니다" : "찜 목록에서 제거되었습니다"
+                let type: ToastType = isAdded ? .success : .info
+                owner.toastPresenter.show(message: message, type: type)
             }
             .disposed(by: disposeBag)
 
